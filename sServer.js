@@ -7,7 +7,7 @@ define(function (require, exports, module) {
 	var eventEmitter = require('events').EventEmitter;
 
 	// The sServer constructor.
-	exports = function (conn) {
+	module.exports = function (conn) {
 		// Inherit from Events.EventEmitter.
 		eventEmitter.call(this);
 

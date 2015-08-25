@@ -25,10 +25,9 @@ var conns = {};
 //// HTTP Server ////
 
 var server = http.createServer(function(request, response) {
-        // Always return "404 - Not Found" to every request.
-    	response.writeHead(404);
-    	response.end();
-    }
+    // Always return "404 - Not Found" to every request.
+	response.writeHead(404);
+	response.end();
 });
 
 server.listen(port, function() {
@@ -48,10 +47,10 @@ wsServer.on('request', function(request) {
 
     // Drop the old connection to this origin if one is already established.
     if (origin in conns) {
-        conn[origin].drop(1000, 'New connection established.');
+        conns[origin].drop(1000, 'New connection established.');
     }
     
-    var conns[origin] = request.accept('wishbanana', origin);
+    conns[origin] = request.accept('wishbanana', origin);
     log('Connection from ' + conns[origin].remoteAddress + ' accepted.');
 
     // Setup connection to await match.
