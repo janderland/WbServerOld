@@ -15,14 +15,14 @@ module.exports.sServer = function (conn) {
 
 	function sendMessage(msg) {
 		if (!server.isOpen()) {
-			throw 'A connection has not yet been established with the game server.'
+			throw 'A connection has not yet been established with the game server.';
 		}
 
 		try {
-			conn.send(JSON.stringify(msg))
+			conn.send(JSON.stringify(msg));
 		}
 		catch (err) {
-			server.emit('sendError', err, msg)
+			server.emit('sendError', err, msg);
 		}
 	}
 
@@ -45,11 +45,11 @@ module.exports.sServer = function (conn) {
 
 			server.emit('message', msg);
 
-			var id = msg.Id
-			if (id == messages.msgIds['Name']) {
+			var id = msg.Id;
+			if (id == messages.msgIds.Name) {
 				server.emit('name', msg.Name);
 			}
-			else if (id == messages.msgIds['Squeeze']) {
+			else if (id == messages.msgIds.Squeeze) {
 				server.emit('squeeze');
 			}
 			else {
@@ -70,7 +70,7 @@ module.exports.sServer = function (conn) {
 	this.namePlease = function () {
 		var msg = new msgs.namePlease();
 		sendMessage(msg);
-	}
+	};
 
 	this.matched = function (opponentName) {
 		var msg = new msgs.matched(opponentName);
