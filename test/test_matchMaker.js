@@ -52,7 +52,7 @@ describe('matchMaker', function () {
 			var ref = matchMaker.match(null);
 			should(ref).equal(null);
 		});
-	})
+	});
 
 	context('Call with two valid connections', function () {
 		it('should return create referee for the game', function () {
@@ -70,8 +70,8 @@ describe('matchMaker', function () {
 			var ref = matchMaker.match(conn3);
 			should(ref).equal(null);
 
-			var ref = matchMaker.match(conn3);
+			ref = matchMaker.match(conn3);
 			should(ref).equal(null);
-		});	
+		});
 	});
 });
