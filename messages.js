@@ -69,7 +69,7 @@ function gameOver (won) {
 }
 
 
-// Node.js support. 
+// Node.js support.
 // This allows us to use the same message.js source file on both the client and server.
 if (typeof module !== 'undefined') {
 	module.exports = {
@@ -78,6 +78,7 @@ if (typeof module !== 'undefined') {
 		squeeze: squeeze,
 		gameOver: gameOver,
 		name: name,
-		namePlease: namePlease
+		namePlease: namePlease,
+		msgIds: msgIds
 	};
 }

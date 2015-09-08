@@ -4,6 +4,9 @@
 // and hooks for important events.
 
 var eventEmitter = require('events').EventEmitter;
+var util = require('util');
+
+var messages = require('./messages.js');
 
 // The sServer constructor.
 module.exports.sServer = function (conn) {
@@ -15,7 +18,7 @@ module.exports.sServer = function (conn) {
 
 	function sendMessage(msg) {
 		if (!server.isOpen()) {
-			throw 'A connection has not yet been established with the game server.';
+			throw new Error('A connection is not established with the client.');
 		}
 
 		try {
@@ -27,7 +30,7 @@ module.exports.sServer = function (conn) {
 	}
 
 	conn.on('close', function (reasonCode, desc) {
-		sever.emit('close');
+		server.emit('close');
 	});
 
 	conn.on('message', function (rawMsg) {
@@ -68,22 +71,22 @@ module.exports.sServer = function (conn) {
 	};
 
 	this.namePlease = function () {
-		var msg = new msgs.namePlease();
+		var msg = new messages.namePlease();
 		sendMessage(msg);
 	};
 
 	this.matched = function (opponentName) {
-		var msg = new msgs.matched(opponentName);
+		var msg = new messages.matched(opponentName);
 		sendMessage(msg);
 	};
 
 	this.countDown = function (value) {
-		var msg = new msgs.countDown(value);
+		var msg = new messages.countDown(value);
 		sendMessage(msg);
 	};
 
 	this.gameOver = function (win) {
-		var msg = new msgs.gameOver(win);
+		var msg = new messages.gameOver(win);
 		sendMessage(msg);
 	};
 
@@ -93,3 +96,4 @@ module.exports.sServer = function (conn) {
 
 	this.remoteAddress = conn.remoteAddress;
 };
+util.inherits(module.exports.sServer, eventEmitter);
