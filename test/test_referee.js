@@ -1,7 +1,6 @@
 // Unit Test - Referee
 
 var should = require('should');
-var rewire = require('rewire');
 var util = require('util');
 var eventEmitter = require('events').EventEmitter;
 var referee = require('../referee.js').referee;
@@ -9,14 +8,20 @@ var referee = require('../referee.js').referee;
 describe('referee', function () {
 	// Mock sServer
 	var sServer = function (name) {
+		// Run the EventEmitter constructor on this.
 		eventEmitter.call(this);
+
 		var isOpen = true;
 		var server = this;
 
+		// sLog - Used for logging sServer details during the testing.
 		function sLog (log) {
 			console.log('\t' + name + ' -- ' + log);
 		}
 
+		// changeState(state) - Ensures the given state is a valid state to transition
+		// to. If so, the state value is updated. Otherwise, an exception is thrown.
+		// state - (int) The state to transition to.
 		function changeState(state) {
 			if (server.state == state - 1) {
 				server.state = state;
@@ -26,6 +31,8 @@ describe('referee', function () {
 			}
 		}
 
+		/// Mocked members ///
+
 		this.isOpen = function () {
 			return isOpen;
 		};
@@ -33,7 +40,7 @@ describe('referee', function () {
 		this.namePlease = function () {
 			changeState(1);
 			server.emit('name', name);
-		}
+		};
 
 		this.matched = function (opponentName) {
 			changeState(2);
@@ -49,8 +56,7 @@ describe('referee', function () {
 				(function () {
 					if (server.state < 4) {
 						server.emit('squeeze');
-						server.squeezes++;
-						
+
 						process.nextTick(arguments.callee);
 					}
 				})();
@@ -58,10 +64,8 @@ describe('referee', function () {
 		};
 
 		this.gameOver = function (win) {
-			debugger;
 			changeState(4);
 			server.win = win;
-			server.emit('gameOver');
 		};
 
 		this.close = function (reasonCode, desc) {
@@ -69,11 +73,11 @@ describe('referee', function () {
 		};
 
 		this.state = 0;
-		this.squeezes = 0;
 		this.win = false;
 	};
 	util.inherits(sServer, eventEmitter);
 	
+
 	context('game simulation', function () {
 		it('', function (done) {
 			// Games currently take around 6s, so 8s should be enough time.
@@ -86,8 +90,8 @@ describe('referee', function () {
 			// After this test, display the final state, squeezes, and win status for each player.
 			after(function () {
 				var gameStates = ['naming', 'matching', 'counting', 'gaming', 'done'];
-				console.log('\tServer1 --- state: ' + gameStates[server1.state] + ' | squeezes: ' + server1.squeezes + ' | win: ' + server1.win);
-				console.log('\tServer2 --- state: ' + gameStates[server2.state] + ' | squeezes: ' + server2.squeezes + ' | win: ' + server2.win);
+				console.log('\tServer1 --- state: ' + gameStates[server1.state] + ' | squeezes: ' + ref.squeezes1 + ' | win: ' + server1.win);
+				console.log('\tServer2 --- state: ' + gameStates[server2.state] + ' | squeezes: ' + ref.squeezes2 + ' | win: ' + server2.win);
 			});
 
 			// Create the referee, attach our listeners, and start the game.

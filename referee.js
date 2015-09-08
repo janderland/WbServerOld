@@ -40,7 +40,6 @@ module.exports.referee = function (server1, server2) {
 				server1.removeListener('name', getName1);
 				server2.removeListener('name', getName2);
 
-				ref.emit('gotName', name1, name2);
 				startCountDown();
 			}
 		}
@@ -61,7 +60,6 @@ module.exports.referee = function (server1, server2) {
 
 			if (value == 0) {
 				clearInterval(intervalID);
-				ref.emit('gameStart');
 				playGame();
 			}
 			else {

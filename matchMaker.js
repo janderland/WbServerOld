@@ -15,8 +15,7 @@ var waitingConn = null;
 var referees = {};
 
 //// Export ////
-// match(conn)
-// If a pair is available, pair up the connections and start their game. If a pair isn't available, 
+// match(conn) - If a pair is available, pair up the connections and start their game. If a pair isn't available, 
 // the connection is placed in a waiting list to be paired.
 // conn - The connection to be paired.
 // Returns - Null if the connection wasn't yet paired. Otherwise, returns the referee representing the game for the pair.
