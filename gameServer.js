@@ -1,66 +1,41 @@
-// Server Entry Point
-// gameServer.js
+// Wish Banana
+// Game Server
+// Entry point for the wish banana server.
 
-//// Requires ////
-
-var webSocketServer = require('websocket').server;
+var WebSocketServer = require('websocket').server;
 var http = require('http');
+var queueToPlay = require('./matchMaker.js').queueToPlay;
 
-// WB Requires
-var matchMaker = require('./matchMaker.js');
-var utilities = require('./utilities');
-var log = utilities.log;
+function log (msg) {
+    // TODO
+    console.log(msg);
+}
 
-
-//// Settings ////
-var port = 8080;
-
-
-//// Misc Members ////
-
-// The 'conns dictionary'. This stores all the active connection objects keyed by their origin IP.
+var port = 3456;
 var conns = {};
 
-
-//// HTTP Server ////
-
-var server = http.createServer(function(request, response) {
-    // Always return "404 - Not Found" to every request.
-	response.writeHead(404);
-	response.end();
-});
-
-server.listen(port, function() {
+var httpServer = http.createServer();
+httpServer.listen(port, function onHttpListening () {
     log('HTTP server is listening on port ' + port);
 });
 
+var wsServer = new WebSocketServer({ httpServer: httpServer });
+wsServer.on('request', function onConnectionRequest (request) {
+    var addr = request.remoteAddress;
 
-//// Web Socket Server ////
-
-wsServer = new webSocketServer({
-    httpServer: server,
-    autoAcceptConnections: false
-});
-
-wsServer.on('request', function(request) {
-    var origin = request.origin;
-
-    // Drop the old connection to this origin if one is already established.
-    if (origin in conns) {
-        conns[origin].drop(1000, 'New connection established.');
+    // Drop the old connection if this IP already has one.
+    if (addr in conns) {
+        conns[addr].drop(1000, 'New connection established.');
     }
-    
-    conns[origin] = request.accept('wishbanana', origin);
-    log('Connection from ' + conns[origin].remoteAddress + ' accepted.');
 
-    // Setup connection to await match.
-    matchMaker(conns[origin]);
+    var conn = conns[addr] = request.accept('wishbanana', request.origin);
+    log('Connection from ' + conn.remoteAddress + ' accepted.');
 
-    // On connection close, log the reason code and description and then
-    // remove the connection from the Conns dictionary.
-    conns[origin].on('close', function(reasonCode, description) {
-        log('Client ' + conns[origin].remoteAddress + ' disconnected.');
+    queueToPlay(conn);
+
+    conn.on('close', function onConnectionClose (reasonCode, description) {
+        log('Client ' + conn.remoteAddress + ' disconnected.');
         log(reasonCode + ' ' + description);
-        delete conns[origin];
+        delete conns[addr];
     });
 });

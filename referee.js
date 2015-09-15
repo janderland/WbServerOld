@@ -1,21 +1,18 @@
-// Wish Banana Referee
-// referee.js
-// Main game logic and message handling here.
+// Wish Banana
+// Referee
+// Represents a game between two clients. Encompasses all game logic.
 
-//// Requires ////
 var util = require('util');
-var eventEmitter = require('events').EventEmitter;
+var EventEmitter = require('events').EventEmitter;
 
-//// Settings ////
 var squeezeWinCount = 50;
 var countDownStart = 5;
 
-//// Export ////
-module.exports.referee = function (server1, server2) {
+// Referee Constructor
+module.exports.Referee = function (client1, client2) {
 	// Inherit from Events.EventEmitter.
-	eventEmitter.call(this);
+	EventEmitter.call(this);
 
-	//// Private Members ////
 	var ref = this;
 
 	function startGame () {
@@ -33,32 +30,29 @@ module.exports.referee = function (server1, server2) {
 		}
 
 		function checkNames () {
-			if (name1 != null && name2 != null) {
-				server1.matched(name2);
-				server2.matched(name1);
-
-				server1.removeListener('name', getName1);
-				server2.removeListener('name', getName2);
+			if (name1 !== null && name2 !== null) {
+				client1.matched(name2);
+				client2.matched(name1);
 
 				startCountDown();
 			}
 		}
 
-		server1.on('name', getName1);
-		server2.on('name', getName2);
+		client1.once('name', getName1);
+		client2.once('name', getName2);
 
-		server1.namePlease();
-		server2.namePlease();
+		client1.namePlease();
+		client2.namePlease();
 	}
 
 	function startCountDown () {
 		var value = countDownStart;
 
-		var intervalID = setInterval(function () {
-			server1.countDown(value);
-			server2.countDown(value);
+		var intervalID = setInterval(function countingDown () {
+			client1.countDown(value);
+			client2.countDown(value);
 
-			if (value == 0) {
+			if (value === 0) {
 				clearInterval(intervalID);
 				playGame();
 			}
@@ -70,46 +64,45 @@ module.exports.referee = function (server1, server2) {
 
 	function playGame () {
 		function squeeze1 () {
-			ref.squeezes1++
+			ref.squeezes1++;
 			if (ref.squeezes1 >= squeezeWinCount) {
 				endGame(true);
 			}
 		}
 
 		function squeeze2 () {
-			ref.squeezes2++
+			ref.squeezes2++;
 			if (ref.squeezes2 >= squeezeWinCount) {
 				endGame(false);
 			}
 		}
 
 		function endGame(player1Won) {
-			debugger;
-			server1.removeListener('squeeze', squeeze1);
-			server2.removeListener('squeeze', squeeze2);
+			client1.removeListener('squeeze', squeeze1);
+			client2.removeListener('squeeze', squeeze2);
 			gameOver(player1Won);
 		}
 
-		server1.on('squeeze', squeeze1);
-		server2.on('squeeze', squeeze2);
+		client1.on('squeeze', squeeze1);
+		client2.on('squeeze', squeeze2);
 	}
 
 	function gameOver(player1Won) {
-		server1.gameOver(player1Won);
-		server2.gameOver(!player1Won);
+		client1.gameOver(player1Won);
+		client2.gameOver(!player1Won);
 
-		server1.close(1000, 'Game over');
-		server2.close(1000, 'Game over');
+		client1.close(1000, 'Game over');
+		client2.close(1000, 'Game over');
 
 		ref.emit('gameOver');
 	}
 
 	// Public members
-	this.name = server1.remoteAddress + "vs" + server2.remoteAddress;
-	this.server1 = server1;
-	this.server2 = server2;
+	this.name = client1.remoteAddress + "vs" + client2.remoteAddress;
+	this.client1 = client1;
+	this.client2 = client2;
 	this.squeezes1 = 0;
 	this.squeezes2 = 0;
 	this.startGame = startGame;
 };
-util.inherits(module.exports.referee, eventEmitter);
+util.inherits(module.exports.Referee, EventEmitter);

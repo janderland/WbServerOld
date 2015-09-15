@@ -1,13 +1,14 @@
-// Unit Test - Match Maker
+// Wish Banana
+// Unit Test for matchMaker.js
 
 var should = require('should');
 var rewire = require('rewire');
 var util = require('util');
-var eventEmitter = require('events').EventEmitter;
+var EventEmitter = require('events').EventEmitter;
 var matchMaker = rewire('../matchMaker.js');
 
 // Test
-describe('matchMaker', function () {
+describe('Match Maker', function testMatchMaker () {
 	var conn1 = {
 		remoteAddress: '1.1.1.1'
 	};
@@ -18,60 +19,56 @@ describe('matchMaker', function () {
 		remoteAddress: '3.3.3.3'
 	};
 
-	before(function () {
+	before(function before () {
 		// Mock Referee
-		var referee = function (server1, server2) {
-			// Inherit the members of Event Emitter.
-			eventEmitter.call(this);
+		var Referee = function (server1, server2) {
+			// Inherit from EventEmitter.
+			EventEmitter.call(this);
 
-			this.Name = server1.remoteAddress + "vs" + server2.remoteAddress;
+			this.name = server1.remoteAddress + "vs" + server2.remoteAddress;
 		};
-		util.inherits(referee, eventEmitter);
+		util.inherits(Referee, EventEmitter);
 
-		// Mock sServer
-		var sServer = function (conn) {
-			// Inherit the members of Event Emitter.
-			eventEmitter.call(this);
+		// Mock S2CWrapper
+		var S2CWrapper = function (conn) {
+			// Inherit from EventEmitter.
+			EventEmitter.call(this);
 
 			this.remoteAddress = conn.remoteAddress;
 		};
-		util.inherits(sServer, eventEmitter);
+		util.inherits(S2CWrapper, EventEmitter);
 
-		var log = function (log) {};
+		var log = function (msg) {
+			console.log('\t' + msg);
+		};
 
-		// Inject the mocked referee and sServer.
+		// Inject the mocked Referee and S2CWrapper.
 		matchMaker.__set__({
-			referee: referee,
-			sServer: sServer,
+			Referee: Referee,
+			S2CWrapper: S2CWrapper,
 			log: log
 		});
 	});
 
-	context('Call with null connection', function () {
-		it('should return null', function () {
-			var ref = matchMaker.match(null);
-			should(ref).equal(null);
-		});
+	it('Call with null', function callWithNullTest () {
+		var ref = matchMaker.queueToPlay(null);
+		should(ref).equal(null);
 	});
 
-	context('Call with two valid connections', function () {
-		it('should return create referee for the game', function () {
-			var ref = matchMaker.match(conn1);
-			should(ref).equal(null);
+	it('Call with two valid connections', function validConnTest () {
+		var ref = matchMaker.queueToPlay(conn1);
+		should(ref).equal(null);
 
-			ref = matchMaker.match(conn2);
-			should.exist(ref);
-			ref.Name.should.equal('2.2.2.2vs1.1.1.1');
-		});
+		ref = matchMaker.queueToPlay(conn2);
+		should.exist(ref);
+		ref.name.should.equal('2.2.2.2vs1.1.1.1');
 	});
 
-	context('Call with two identical connections', function () {
-		it('should return null', function () {
-			var ref = matchMaker.match(conn3);
-			should(ref).equal(null);
+	it('Call with two identical connections', function identicalConnTest () {
+		var ref = matchMaker.queueToPlay(conn3);
+		should(ref).equal(null);
 
-			ref = matchMaker.match(conn3);
-			should(ref).equal(null);
-		});
+		ref = matchMaker.queueToPlay(conn3);
+		should(ref).equal(null);
 	});
 });

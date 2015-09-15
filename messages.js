@@ -1,8 +1,9 @@
-// Wish Banana Socket Messages
-// messages.js
+// Wish Banana
+// Game Messages
+// JavaScript objects representing the messages passed between client and server over a WebSocket connection.
+// NOTE: This file is designed to be compatible in both a Node.js and web browser environment.
 
-// The IDs of the different banana messages.
-var msgIds = {
+var MESSAGE_ID = {
 	Matched:    0,
 	CountDown:  1,
 	Squeeze:    2,
@@ -11,74 +12,75 @@ var msgIds = {
 	NamePlease: 5
 };
 
-// Base message.
-// msgType: (string) The type of message, defined by one of the keys in msgIds.
-function msg (msgType) {
-	var id = msgIds[msgType];
+// Message Constructors
+var NamePlease;
+var Name;
+var Matched;
+var CountDown;
+var Squeeze;
+var GameOver;
 
-	// Make sure the msgType matches up with a valid id.
-	if (typeof id == 'undefined') {
-		throw msgType + ' is not a valid message type.';
+(function private () {
+	// Base Message Constructor
+	function Message (type) {
+		var id = MESSAGE_ID[type];
+
+		// Make sure the type matches up with a valid id.
+		if (typeof id == 'undefined') {
+			throw type + ' is not a valid message type.';
+		}
+
+		this.Id = id;
 	}
 
-	this.Id = id;
-}
+	NamePlease = function () {
+		// Call the base constructor
+		Message.call(this, 'NamePlease');
+	};
 
-function namePlease () {
-	// Call the base constructor
-	msg.call(this, 'NamePlease');
-}
+	Name = function (name) {
+		// Call the base constructor
+		Message.call(this, 'Name');
 
-function name (name) {
-	// Call the base constructor
-	msg.call(this, 'Name');
+		this.name = name;
+	};
 
-	this.Name = name;
-}
+	Matched = function (opponentName) {
+		// Call the base constructor
+		Message.call(this, 'Matched');
 
-// Matched message.
-// opponentName: (string) The opposing player's name.
-function matched (opponentName) {
-	// Call the base constructor
-	msg.call(this, 'Matched');
+		this.opponentName = opponentName;
+	};
 
-	this.OpponentName = opponentName;
-}
+	CountDown = function (value) {
+		// Call the base constructor
+		Message.call(this, 'CountDown');
 
-// CountDown message.
-// value: (number) The current value of the countdown. E.g. 5, 4, 3, 2, 1, or 0.
-function countDown (value) {
-	// Call the base constructor
-	msg.call(this, 'CountDown');
+		this.value = value;
+	};
 
-	this.Value = value;
-}
+	Squeeze = function () {
+		//Call the base constructor
+		Message.call(this, 'Squeeze');
+	};
 
-// Squeeze message
-function squeeze () {
-	//Call the base constructor
-	msg.call(this, 'Squeeze');
-}
+	GameOver = function (won) {
+		// Call the base constructor
+		Message.call(this, 'GameOver');
 
-// GameOver message.
-function gameOver (won) {
-	// Call base constructor
-	msg.call(this, 'GameOver');
-
-	this.Won = won;
-}
-
+		this.won = won;
+	};
+})();
 
 // Node.js support.
-// This allows us to use the same message.js source file on both the client and server.
 if (typeof module !== 'undefined') {
 	module.exports = {
-		matched: matched,
-		countDown: countDown,
-		squeeze: squeeze,
-		gameOver: gameOver,
-		name: name,
-		namePlease: namePlease,
-		msgIds: msgIds
+		Matched:	Matched,
+		CountDown:	CountDown,
+		Squeeze:	Squeeze,
+		GameOver:	GameOver,
+		Name:		Name,
+		NamePlease:	NamePlease,
+		MESSAGE_ID:	MESSAGE_ID
 	};
 }

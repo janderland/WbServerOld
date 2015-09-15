@@ -1,33 +1,35 @@
-// Unit Test - Referee
+// Wish Banana
+// Unit Test for Referee.js
 
 var should = require('should');
 var util = require('util');
-var eventEmitter = require('events').EventEmitter;
-var referee = require('../referee.js').referee;
+var EventEmitter = require('events').EventEmitter;
+var Referee = require('../Referee.js').Referee;
 
-describe('referee', function () {
-	// Mock sServer
-	var sServer = function (name) {
+var verbose = true;
+
+describe('Referee', function testReferee () {
+	// Mock S2CWrapper
+	var S2CWrapper = function (name) {
 		// Run the EventEmitter constructor on this.
-		eventEmitter.call(this);
+		EventEmitter.call(this);
 
 		var isOpen = true;
-		var server = this;
+		var thisWrapper = this;
 
-		// sLog - Used for logging sServer details during the testing.
-		function sLog (log) {
-			console.log('\t' + name + ' -- ' + log);
+		function log (msg) {
+			if (verbose) {
+				console.log('\t' + name + ' -- ' + msg);
+			}
 		}
 
-		// changeState(state) - Ensures the given state is a valid state to transition
-		// to. If so, the state value is updated. Otherwise, an exception is thrown.
-		// state - (int) The state to transition to.
+		// changeState() ensures that we step through every state in order.
 		function changeState(state) {
-			if (server.state == state - 1) {
-				server.state = state;
+			if (thisWrapper.state === state - 1) {
+				thisWrapper.state = state;
 			}
 			else {
-				throw new Error(name + ' -- Invalid state change from ' + server.state + ' to ' + state);
+				throw new Error(name + ' -- Invalid state change from ' + thisWrapper.state + ' to ' + state);
 			}
 		}
 
@@ -39,23 +41,23 @@ describe('referee', function () {
 
 		this.namePlease = function () {
 			changeState(1);
-			server.emit('name', name);
+			thisWrapper.emit('name', name);
 		};
 
 		this.matched = function (opponentName) {
 			changeState(2);
-			sLog('matched with ' + opponentName);
+			log('matched with ' + opponentName);
 		};
 
 		this.countDown = function (value) {
-			sLog(value);
-			if (value == 0) {
+			log(value);
+			if (value === 0) {
 				changeState(3);
 
-				// Non-blocking while loop. e.g. while(server.state < 4)...
+				// Non-blocking while loop. e.g. while(thisWrapper.state < 4)...
 				(function () {
-					if (server.state < 4) {
-						server.emit('squeeze');
+					if (thisWrapper.state < 4) {
+						thisWrapper.emit('squeeze');
 
 						process.nextTick(arguments.callee);
 					}
@@ -65,51 +67,53 @@ describe('referee', function () {
 
 		this.gameOver = function (win) {
 			changeState(4);
-			server.win = win;
+			thisWrapper.win = win;
 		};
 
 		this.close = function (reasonCode, desc) {
-			isOpen = false
+			isOpen = false;
 		};
 
 		this.state = 0;
 		this.win = false;
 	};
-	util.inherits(sServer, eventEmitter);
-	
+	util.inherits(S2CWrapper, EventEmitter);
 
-	context('game simulation', function () {
-		it('', function (done) {
-			// Games currently take around 6s, so 8s should be enough time.
-			this.timeout(8000);
+	it('game simulation', function gameSimulationTest (done) {
+		// Games currently take around 6s, so 8s should be enough time.
+		this.timeout(8000);
 
-			// Instantiate the mock sServer instances.
-			var server1 = new sServer('server1');
-			var server2 = new sServer('server2');
+		// Instantiate the mock S2CWrapper instances.
+		var client1 = new S2CWrapper('client1');
+		var client2 = new S2CWrapper('client2');
 
-			// After this test, display the final state, squeezes, and win status for each player.
-			after(function () {
-				var gameStates = ['naming', 'matching', 'counting', 'gaming', 'done'];
-				console.log('\tServer1 --- state: ' + gameStates[server1.state] + ' | squeezes: ' + ref.squeezes1 + ' | win: ' + server1.win);
-				console.log('\tServer2 --- state: ' + gameStates[server2.state] + ' | squeezes: ' + ref.squeezes2 + ' | win: ' + server2.win);
-			});
+		// After this test, display the final state, squeezes, and win status for each player.
+		after(function afterGameSimulation () {
+			var gameStates = ['naming', 'matching', 'counting', 'gaming', 'done'];
+			if (verbose) {
+				console.log('\tclient1 --- state: ' + gameStates[client1.state] +
+					' | squeezes: ' + ref.squeezes1 + ' | win: ' + client1.win);
 
-			// Create the referee, attach our listeners, and start the game.
-			var ref = new referee(server1, server2);
-			ref.on('gameOver', function () {
-				if (server1.win) {
-					(ref.squeezes1).should.be.greaterThan(ref.squeezes2);
-				}
-				else {
-					(ref.squeezes1).should.be.lessThan(ref.squeezes2);
-				}
-
-				(server1.state).should.equal(4);
-				(server2.state).should.equal(4);
-
-				done();
-			});
-			ref.startGame();
+				console.log('\tclient2 --- state: ' + gameStates[client2.state] +
+					' | squeezes: ' + ref.squeezes2 + ' | win: ' + client2.win);
+			}
 		});
+
+		// Create the Referee, attach our listeners, and start the game.
+		var ref = new Referee(client1, client2);
+		ref.on('gameOver', function () {
+			if (client1.win) {
+				(ref.squeezes1).should.be.greaterThan(ref.squeezes2);
+			}
+			else {
+				(ref.squeezes1).should.be.lessThan(ref.squeezes2);
+			}
+
+			(client1.state).should.equal(4);
+			(client2.state).should.equal(4);
+
+			done();
+		});
+		ref.startGame();
 	});
 });

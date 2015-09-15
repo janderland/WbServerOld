@@ -1,30 +1,25 @@
-// Wish Banana Game Match Maker
-// matchMaker.js
-// Pairs up websocket connections, wraps them in a sServer object, and start the
-// game via the referee.
+// Wish Banana
+// Match Maker
+// Pairs up websocket connections and instantiates a game for each pair.
 
-//// Requires ////
-var referee = require('./referee.js').referee;
-var sServer = require('./sServer.js').sServer;
-var utilities = require('./utilities.js');
-var log = utilities.log;
+var Referee = require('./referee.js').Referee;
+var S2CWrapper = require('./server2Client.js').S2CWrapper;
 
-//// Private Members ////
+function log (msg) {
+	// TODO
+	console.log(msg);
+}
+
 var waitingConn = null;
+var Referees = {};
 
-var referees = {};
-
-//// Export ////
-// match(conn) - If a pair is available, pair up the connections and start their game. If a pair isn't available, 
-// the connection is placed in a waiting list to be paired.
-// conn - The connection to be paired.
-// Returns - Null if the connection wasn't yet paired. Otherwise, returns the referee representing the game for the pair.
-module.exports.match = function (conn) {
-	// Make sure input isn't a null/undefined/false/empty string. This would screw things up.
+module.exports.queueToPlay = function (conn) {
+	// Make sure the given conn isn't falsey. This would screw things up.
 	if (!conn) {
 		return null;
 	}
-	if (waitingConn != null && conn.remoteAddress == waitingConn.remoteAddress) {
+	// Make sure the given conn isn't already waiting for a pair.
+	if (waitingConn !== null && conn.remoteAddress === waitingConn.remoteAddress) {
 		return null;
 	}
 	else {
@@ -33,18 +28,18 @@ module.exports.match = function (conn) {
 			return null;
 		}
 		else {
-			var server1 = new sServer(conn);
-			var server2 = new sServer(waitingConn);
+			var client1 = new S2CWrapper(conn);
+			var client2 = new S2CWrapper(waitingConn);
 
 			waitingConn = null;
 
-			var ref = new referee(server1, server2);
-			referees[ref.name] = ref;
+			var ref = new Referee(client1, client2);
+			Referees[ref.name] = ref;
 
 			log(ref.name + " started.");
-			ref.on('gameOver', function () {
+			ref.on('gameOver', function onRefGameOver () {
 				log(ref.name + " ended.");
-				delete referees[ref.name];
+				delete Referees[ref.name];
 			});
 
 			return ref;
