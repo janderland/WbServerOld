@@ -1,0 +1,4 @@
+{
+	"name": "Wish Banana Game Server",
+	"main": "./gameServer.js"
+}
