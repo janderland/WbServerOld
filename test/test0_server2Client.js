@@ -7,72 +7,21 @@ var should = require('should');
 var EventEmitter = require('events').EventEmitter;
 var util = require('util');
 var S2CWrapper = require('../server2Client.js').S2CWrapper;
+var C2SWrapper = require('./client2Server_node.js').C2SWrapper;
 var messages = require('../messages.js');
 
-var port = 9090;
+var port = 9999;
 
 function log (msg) {
 	console.log('\t' + msg);
 }
 
 describe('Server To Client WebSocket Wrapper', function testS2CWrapper () {
+	var httpServer;
+	var webSocketServer;
+	var webSocketClient;
 	var theS2CWrapper;
-	var clientHelper;
-
-	function WebSocketClientHelper (conn) {
-		// Inherit from EventEmitter
-		EventEmitter.call(this);
-
-		var thisHelper = this;
-
-		function sendMessage (msg) {
-			try {
-				conn.send(JSON.stringify(msg));
-			}
-			catch (err) {
-				log(err);
-			}
-		}
-
-		conn.on('message', function onClientMessage (rawMsg) {
-			var msg;
-			if (rawMsg.type == 'utf8') {
-				msg = JSON.parse(rawMsg.utf8Data);
-
-				if (msg.Id == messages.MESSAGE_ID.NamePlease) {
-					thisHelper.emit('namePlease');
-				}
-				else if (msg.Id == messages.MESSAGE_ID.Matched) {
-					thisHelper.emit('matched', msg.opponentName);
-				}
-				else if (msg.Id == messages.MESSAGE_ID.CountDown) {
-					thisHelper.emit('countDown', msg.value);
-				}
-				else if (msg.Id == messages.MESSAGE_ID.GameOver) {
-					thisHelper.emit('gameOver', msg.won);
-				}
-				else {
-					throw new Error('Unknown message id: ' + msg.id);
-				}
-			}
-			else {
-				throw new Error('Received binary message.');
-			}
-		});
-
-		conn.on('close', function onClientClose () {
-			thisHelper.emit('close');
-		});
-
-		this.name = function (name) {
-			sendMessage(new messages.Name(name));
-		};
-
-		this.squeeze = function () {
-			sendMessage(new messages.Squeeze());
-		};
-	}
-	util.inherits(WebSocketClientHelper, EventEmitter);
+	var theClient;
 
 	before(function before (done) {
 		var serverDone = false;
@@ -84,12 +33,12 @@ describe('Server To Client WebSocket Wrapper', function testS2CWrapper () {
 			}
 		}
 
-		var httpServer = http.createServer();
+		httpServer = http.createServer();
 		httpServer.listen(port, function onHttpListening () {
 		    log('Server is listening on port ' + port);
 		});
 
-		var webSocketServer = new webSocket.server({ httpServer: httpServer });
+		webSocketServer = new webSocket.server({ httpServer: httpServer });
 		webSocketServer.once('request', function onFirstRequestFromClient (request) {
 		    var conn = request.accept('wishbanana', request.origin);
 		    log('Connection from ' + conn.remoteAddress + ' accepted.');
@@ -99,21 +48,26 @@ describe('Server To Client WebSocket Wrapper', function testS2CWrapper () {
 		    checkIfDone();
 		});
 
-		var webSocketClient = new webSocket.client();
+		webSocketClient = new webSocket.client();
 		webSocketClient.on('connect', function onConnectionToServer (conn) {
-			clientHelper = new WebSocketClientHelper(conn);
+			theClient = new C2SWrapper(conn);
 			clientDone = true;
 			checkIfDone();
 		});
 		webSocketClient.connect('ws://127.0.0.1:' + port, ['wishbanana']);
 	});
 
-	it('isOpen() should be true', function isOpenTest () {
+	after(function after () {
+		webSocketServer.shutDown();
+		httpServer.close();
+	});
+
+	it('isOpen()', function isOpenTest () {
 		(theS2CWrapper.isOpen()).should.be.true();
 	});
 
 	it('namePlease()', function namePleaseTest (done) {
-		clientHelper.once('namePlease', function () {
+		theClient.once('namePlease', function () {
 			done();
 		});
 
@@ -122,7 +76,7 @@ describe('Server To Client WebSocket Wrapper', function testS2CWrapper () {
 
 	it('matched()', function matchedTest (done) {
 		var theName = 'Peter';
-		clientHelper.once('matched', function (name) {
+		theClient.once('matched', function (name) {
 			(name).should.equal(theName);
 			done();
 		});
@@ -132,7 +86,7 @@ describe('Server To Client WebSocket Wrapper', function testS2CWrapper () {
 
 	it('countDown()', function countDownTest (done) {
 		var theValue = 100;
-		clientHelper.once('countDown', function (value) {
+		theClient.once('countDown', function (value) {
 			(value).should.equal(theValue);
 			done();
 		});
@@ -142,7 +96,7 @@ describe('Server To Client WebSocket Wrapper', function testS2CWrapper () {
 
 	it('gameOver()', function gameOverTest (done) {
 		var theWin = true;
-		clientHelper.once('gameOver', function (win) {
+		theClient.once('gameOver', function (win) {
 			(win).should.equal(theWin);
 			done();
 		});
@@ -157,7 +111,7 @@ describe('Server To Client WebSocket Wrapper', function testS2CWrapper () {
 			done();
 		});
 
-		clientHelper.name(theName);
+		theClient.name(theName);
 	});
 
 	it('onSqueeze', function onSqueezeTest (done) {
@@ -165,11 +119,11 @@ describe('Server To Client WebSocket Wrapper', function testS2CWrapper () {
 			done();
 		});
 
-		clientHelper.squeeze();
+		theClient.squeeze();
 	});
 
 	it('close()', function closeTest (done) {
-		clientHelper.once('close', function () {
+		theClient.once('close', function () {
 			done();
 		});
 

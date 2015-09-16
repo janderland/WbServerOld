@@ -17,8 +17,8 @@ module.exports.S2CWrapper = function (conn) {
 		conn.send(JSON.stringify(msg));
 	}
 
-	conn.on('close', function onClose (reasonCode, desc) {
-		thisWrapper.emit('close', reasonCode, desc);
+	conn.on('close', function onClose () {
+		thisWrapper.emit('close');
 	});
 
 	conn.on('message', function onMessage (rawMsg) {
@@ -34,9 +34,7 @@ module.exports.S2CWrapper = function (conn) {
 				return;
 			}
 
-			thisWrapper.emit('message', msg);
-
-			var id = msg.Id;
+			var id = msg.id;
 			if (id == messages.MESSAGE_ID.Name) {
 				thisWrapper.emit('name', msg.name);
 			}
@@ -76,8 +74,8 @@ module.exports.S2CWrapper = function (conn) {
 		sendMessage(msg);
 	};
 
-	this.close = function (reasonCode, desc) {
-		conn.drop(reasonCode, desc);
+	this.close = function () {
+		conn.drop();
 	};
 
 	this.remoteAddress = conn.remoteAddress;

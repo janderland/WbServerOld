@@ -15,7 +15,7 @@ module.exports.Referee = function (client1, client2) {
 
 	var ref = this;
 
-	function startGame () {
+	function enterNamingMatchingState () {
 		var name1 = null;
 		var name2 = null;
 
@@ -34,7 +34,7 @@ module.exports.Referee = function (client1, client2) {
 				client1.matched(name2);
 				client2.matched(name1);
 
-				startCountDown();
+				enterCountingState();
 			}
 		}
 
@@ -45,7 +45,7 @@ module.exports.Referee = function (client1, client2) {
 		client2.namePlease();
 	}
 
-	function startCountDown () {
+	function enterCountingState () {
 		var value = countDownStart;
 
 		var intervalID = setInterval(function countingDown () {
@@ -54,7 +54,7 @@ module.exports.Referee = function (client1, client2) {
 
 			if (value === 0) {
 				clearInterval(intervalID);
-				playGame();
+				enterGamingState();
 			}
 			else {
 				value--;
@@ -62,7 +62,7 @@ module.exports.Referee = function (client1, client2) {
 		}, 1000);
 	}
 
-	function playGame () {
+	function enterGamingState () {
 		function squeeze1 () {
 			ref.squeezes1++;
 			if (ref.squeezes1 >= squeezeWinCount) {
@@ -80,14 +80,14 @@ module.exports.Referee = function (client1, client2) {
 		function endGame(player1Won) {
 			client1.removeListener('squeeze', squeeze1);
 			client2.removeListener('squeeze', squeeze2);
-			gameOver(player1Won);
+			enterDoneState(player1Won);
 		}
 
 		client1.on('squeeze', squeeze1);
 		client2.on('squeeze', squeeze2);
 	}
 
-	function gameOver(player1Won) {
+	function enterDoneState(player1Won) {
 		client1.gameOver(player1Won);
 		client2.gameOver(!player1Won);
 
@@ -103,6 +103,6 @@ module.exports.Referee = function (client1, client2) {
 	this.client2 = client2;
 	this.squeezes1 = 0;
 	this.squeezes2 = 0;
-	this.startGame = startGame;
+	this.startGame = enterNamingMatchingState;
 };
 util.inherits(module.exports.Referee, EventEmitter);

@@ -30,7 +30,7 @@ var GameOver;
 			throw type + ' is not a valid message type.';
 		}
 
-		this.Id = id;
+		this.id = id;
 	}
 
 	NamePlease = function () {
