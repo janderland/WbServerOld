@@ -2,14 +2,11 @@
 // Game Server
 // Entry point for the wish banana server.
 
+var logging = require('./log.js').getLoggingHandle('gameServer');
+var log = logging.log;
 var WebSocketServer = require('websocket').server;
 var http = require('http');
 var queueToPlay = require('./matchMaker.js').queueToPlay;
-
-function log (msg) {
-    // TODO
-    console.log(msg);
-}
 
 var port = 3456;
 var conns = {};
@@ -26,16 +23,19 @@ wsServer.on('request', function onConnectionRequest (request) {
     // Drop the old connection if this IP already has one.
     if (addr in conns) {
         conns[addr].drop(1000, 'New connection established.');
+        log('Dropping connection to ' + addr + ' for new connection.', logging.DEBUG);
     }
 
     var conn = conns[addr] = request.accept('wishbanana', request.origin);
-    log('Connection from ' + conn.remoteAddress + ' accepted.');
-
-    queueToPlay(conn);
+    log('Connection from ' + addr + ' accepted.', logging.DEBUG);
 
     conn.on('close', function onConnectionClose (reasonCode, description) {
-        log('Client ' + conn.remoteAddress + ' disconnected.');
-        log(reasonCode + ' ' + description);
+        log('Client ' + conn.remoteAddress + ' disconnected. Code: ' + reasonCode + '. Desc: ' + description);
         delete conns[addr];
     });
+
+    var ref = queueToPlay(conn);
+    if (ref !== null) {
+        ref.startGame();
+    }
 });

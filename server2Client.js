@@ -2,15 +2,16 @@
 // Server To Client Connection Wrapper
 // Wraps the server-to-client websocket connection, providing syntax sugar and convenience functions.
 
+var logging = require('./log.js').getLoggingHandle('server2Client');
+var log = logging.log;
 var EventEmitter = require('events').EventEmitter;
 var util = require('util');
 var messages = require('./messages.js');
 
 // S2CWrapper Constructor
-module.exports.S2CWrapper = function (conn) {
+module.exports.Client = function (conn) {
 	// Inherit from Events.EventEmitter.
 	EventEmitter.call(this);
-
 	var thisWrapper = this;
 
 	function sendMessage (msg) {

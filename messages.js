@@ -3,24 +3,21 @@
 // JavaScript objects representing the messages passed between client and server over a WebSocket connection.
 // NOTE: This file is designed to be compatible in both a Node.js and web browser environment.
 
-var MESSAGE_ID = {
-	Matched:    0,
-	CountDown:  1,
-	Squeeze:    2,
-	GameOver:   3,
-	Name:       4,
-	NamePlease: 5
-};
+// Node.js support.
+if (typeof define !== 'function') {
+    var define = require('amdefine')(module);
+}
 
-// Message Constructors
-var NamePlease;
-var Name;
-var Matched;
-var CountDown;
-var Squeeze;
-var GameOver;
+define(function messagesModule () {
+	var MESSAGE_ID = {
+		Matched:    0,
+		CountDown:  1,
+		Squeeze:    2,
+		GameOver:   3,
+		Name:       4,
+		NamePlease: 5
+	};
 
-(function private () {
 	// Base Message Constructor
 	function Message (type) {
 		var id = MESSAGE_ID[type];
@@ -33,48 +30,45 @@ var GameOver;
 		this.id = id;
 	}
 
-	NamePlease = function () {
+	var NamePlease = function () {
 		// Call the base constructor
 		Message.call(this, 'NamePlease');
 	};
 
-	Name = function (name) {
+	var Name = function (name) {
 		// Call the base constructor
 		Message.call(this, 'Name');
 
 		this.name = name;
 	};
 
-	Matched = function (opponentName) {
+	var Matched = function (opponentName) {
 		// Call the base constructor
 		Message.call(this, 'Matched');
 
 		this.opponentName = opponentName;
 	};
 
-	CountDown = function (value) {
+	var CountDown = function (value) {
 		// Call the base constructor
 		Message.call(this, 'CountDown');
 
 		this.value = value;
 	};
 
-	Squeeze = function () {
+	var Squeeze = function () {
 		//Call the base constructor
 		Message.call(this, 'Squeeze');
 	};
 
-	GameOver = function (won) {
+	var GameOver = function (won) {
 		// Call the base constructor
 		Message.call(this, 'GameOver');
 
 		this.won = won;
 	};
-})();
 
-// Node.js support.
-if (typeof module !== 'undefined') {
-	module.exports = {
+	return {
 		Matched:	Matched,
 		CountDown:	CountDown,
 		Squeeze:	Squeeze,
@@ -83,4 +77,4 @@ if (typeof module !== 'undefined') {
 		NamePlease:	NamePlease,
 		MESSAGE_ID:	MESSAGE_ID
 	};
-}
+});

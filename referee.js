@@ -2,10 +2,12 @@
 // Referee
 // Represents a game between two clients. Encompasses all game logic.
 
+var logging = require('./log.js').getLoggingHandle('referee');
+var log = logging.log;
 var util = require('util');
 var EventEmitter = require('events').EventEmitter;
 
-var squeezeWinCount = 50;
+var clickWinCount = 50;
 var countDownStart = 5;
 
 // Referee Constructor
@@ -13,42 +15,60 @@ module.exports.Referee = function (client1, client2) {
 	// Inherit from Events.EventEmitter.
 	EventEmitter.call(this);
 
-	var ref = this;
+	var player1 = new Player(client1);
+	var player2 = new Player(client2);
+	var refName = client1.remoteAddress + "vs" + client2.remoteAddress;
 
-	function enterNamingMatchingState () {
-		var name1 = null;
-		var name2 = null;
-
-		function getName1 (name) {
-			name1 = name;
-			checkNames();
+	function refLog (msg, level) {
+		if (level === undefined) {
+			level = logging.DEBUG;
 		}
+		log(refName + ' => ' + msg, level);
+	}
 
-		function getName2 (name) {
-			name2 = name;
-			checkNames();
-		}
+	function Player (client) {
+		this.clicks = 0;
+		this.client = client;
+		this.name = undefined;
 
-		function checkNames () {
-			if (name1 !== null && name2 !== null) {
-				client1.matched(name2);
-				client2.matched(name1);
+		this.click = function () {
+			this.clicks++;
+			refLog(playerName + ' ' + clicks);
+			return this.clicks;
+		};
+	}
+
+	function enterNamingState () {
+		function checkPlayers () {
+			if (player1 !== undefined && player2 !== undefined) {
+				client1.matched(player2.getName());
+				client2.matched(player1.getName());
 
 				enterCountingState();
 			}
 		}
 
-		client1.once('name', getName1);
-		client2.once('name', getName2);
+		client1.once('name', function createPlayer1 (name) {
+			refLog('Got a name.');
+			player1 = new Player(client1, name);
+			checkPlayers();
+		});
+		client2.once('name', function createPlayer2 (name) {
+			refLog('Got a name.');
+			player2 = new Player(client2, name);
+			checkPlayers();
+		});
 
 		client1.namePlease();
 		client2.namePlease();
+		refLog('Waiting for names.');
 	}
 
 	function enterCountingState () {
 		var value = countDownStart;
 
 		var intervalID = setInterval(function countingDown () {
+			refLog('Counting ' + value);
 			client1.countDown(value);
 			client2.countDown(value);
 
@@ -63,31 +83,35 @@ module.exports.Referee = function (client1, client2) {
 	}
 
 	function enterGamingState () {
-		function squeeze1 () {
-			ref.squeezes1++;
-			if (ref.squeezes1 >= squeezeWinCount) {
-				endGame(true);
-			}
-		}
-
-		function squeeze2 () {
-			ref.squeezes2++;
-			if (ref.squeezes2 >= squeezeWinCount) {
-				endGame(false);
-			}
-		}
-
 		function endGame(player1Won) {
-			client1.removeListener('squeeze', squeeze1);
-			client2.removeListener('squeeze', squeeze2);
+			// TODO - Can we still removed the listeners.
+			client1.removeListener('click', squeeze1);
+			client2.removeListener('click', squeeze2);
 			enterDoneState(player1Won);
 		}
 
-		client1.on('squeeze', squeeze1);
-		client2.on('squeeze', squeeze2);
+		client1.on('click', function click1 () {
+			if (player1.click() >= clickWinCount) {
+				endGame(true);
+			}
+		});
+		client2.on('click', function click2 () {
+			if (player2.click() >= clickWinCount) {
+				endGame(false);
+			}
+		});
 	}
 
 	function enterDoneState(player1Won) {
+		var winner;
+		if (player1Won) {
+			winner = player1.getName();
+		}
+		else {
+			winner = player2.getName();
+		}
+		refLog(winner + ' won!');
+
 		client1.gameOver(player1Won);
 		client2.gameOver(!player1Won);
 
@@ -97,12 +121,13 @@ module.exports.Referee = function (client1, client2) {
 		ref.emit('gameOver');
 	}
 
-	// Public members
-	this.name = client1.remoteAddress + "vs" + client2.remoteAddress;
-	this.client1 = client1;
-	this.client2 = client2;
-	this.squeezes1 = 0;
-	this.squeezes2 = 0;
-	this.startGame = enterNamingMatchingState;
+	this.player1 = player1;
+	this.player2 = player2;
+	this.getName = function () {
+		return refName;
+	};
+	this.startGame = enterNamingState;
+
+	log('New game created: ' + this.name);
 };
 util.inherits(module.exports.Referee, EventEmitter);
