@@ -1,21 +1,16 @@
-// Wish Banana
-// Unit Test for Referee.js
+'use strict';
 
-var should = require('should');
-var util = require('util');
-var EventEmitter = require('events').EventEmitter;
-var Referee = require('../Referee.js').Referee;
+const should = require('should'),
+	  util = require('util'),
+	  EventEmitter = require('events'),
+	  Referee = require('../Referee.js'),
 
-var verbose = true;
+	  verbose = true;
 
 describe('Referee', function testReferee () {
-	// Mock S2CWrapper
-	var S2CWrapper = function (name) {
-		// Run the EventEmitter constructor on this.
+	var Client = function (name) {
 		EventEmitter.call(this);
-
-		var isOpen = true;
-		var thisWrapper = this;
+		var thisClient = this;
 
 		function log (msg) {
 			if (verbose) {
@@ -23,25 +18,18 @@ describe('Referee', function testReferee () {
 			}
 		}
 
-		// changeState() ensures that we step through every state in order.
 		function changeState(state) {
-			if (thisWrapper.state === state - 1) {
-				thisWrapper.state = state;
+			if (thisClient.state === state - 1) {
+				thisClient.state = state;
 			}
 			else {
-				throw new Error(name + ' -- Invalid state change from ' + thisWrapper.state + ' to ' + state);
+				throw new Error(name + ' -- Invalid state change from ' + thisClient.state + ' to ' + state);
 			}
 		}
 
-		/// Mocked members ///
-
-		this.isOpen = function () {
-			return isOpen;
-		};
-
 		this.namePlease = function () {
 			changeState(1);
-			thisWrapper.emit('name', name);
+			thisClient.emit('name', name);
 		};
 
 		this.matched = function (opponentName) {
@@ -52,14 +40,15 @@ describe('Referee', function testReferee () {
 		this.countDown = function (value) {
 			log(value);
 			if (value === 0) {
+				debugger;
 				changeState(3);
 
-				// Non-blocking while loop. e.g. while(thisWrapper.state < 4)...
-				(function () {
-					if (thisWrapper.state < 4) {
-						thisWrapper.emit('squeeze');
+				// Non-blocking while loop. e.g. while(thisClient.state < 4)...
+				(function whileInState4 () {
+					if (thisClient.state < 4) {
+						thisClient.emit('click');
 
-						process.nextTick(arguments.callee);
+						process.nextTick(whileInState4);
 					}
 				})();
 			}
@@ -67,46 +56,48 @@ describe('Referee', function testReferee () {
 
 		this.gameOver = function (win) {
 			changeState(4);
-			thisWrapper.win = win;
+			thisClient.win = win;
 		};
 
 		this.close = function (reasonCode, desc) {
-			isOpen = false;
 		};
 
 		this.state = 0;
 		this.win = false;
 	};
-	util.inherits(S2CWrapper, EventEmitter);
+	util.inherits(Client, EventEmitter);
 
 	it('game simulation', function gameSimulationTest (done) {
 		// Games currently take around 6s, so 8s should be enough time.
 		this.timeout(8000);
 
+		var name1 = 'Jon',
+			name2 = 'Chris';
+
 		// Instantiate the mock S2CWrapper instances.
-		var client1 = new S2CWrapper('client1');
-		var client2 = new S2CWrapper('client2');
+		var client1 = new Client(name1);
+		var client2 = new Client(name2);
 
 		// After this test, display the final state, squeezes, and win status for each player.
 		after(function afterGameSimulation () {
 			var gameStates = ['naming', 'matching', 'counting', 'gaming', 'done'];
 			if (verbose) {
-				console.log('\tclient1 --- state: ' + gameStates[client1.state] +
-					' | squeezes: ' + ref.squeezes1 + ' | win: ' + client1.win);
+				console.log('\t' + name1 + ' --- state: ' + gameStates[client1.state] +
+					' | clicks: ' + ref.player1.clickCount + ' | win: ' + client1.win);
 
-				console.log('\tclient2 --- state: ' + gameStates[client2.state] +
-					' | squeezes: ' + ref.squeezes2 + ' | win: ' + client2.win);
+				console.log('\t' + name2 + ' --- state: ' + gameStates[client2.state] +
+					' | clicks: ' + ref.player2.clickCount + ' | win: ' + client2.win);
 			}
 		});
 
 		// Create the Referee, attach our listeners, and start the game.
 		var ref = new Referee(client1, client2);
-		ref.on('gameOver', function () {
+		ref.on('gameOver', function onGameOver () {
 			if (client1.win) {
-				(ref.squeezes1).should.be.greaterThan(ref.squeezes2);
+				(ref.player1.clickCount).should.be.greaterThan(ref.player2.clickCount);
 			}
 			else {
-				(ref.squeezes1).should.be.lessThan(ref.squeezes2);
+				(ref.player2.clickCount).should.be.lessThan(ref.player1.clickCount);
 			}
 
 			(client1.state).should.equal(4);

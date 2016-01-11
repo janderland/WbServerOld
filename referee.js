@@ -1,76 +1,61 @@
-// Wish Banana
-// Referee
-// Represents a game between two clients. Encompasses all game logic.
+'use strict';
 
-var logging = require('./log.js').getLoggingHandle('referee');
-var log = logging.log;
-var util = require('util');
-var EventEmitter = require('events').EventEmitter;
+const util = require('util'),
+	  EventEmitter = require('events').EventEmitter,
 
-var clickWinCount = 50;
-var countDownStart = 5;
+	  logging = require('./log.js')('referee'),
+	  log = logging.log,
 
-// Referee Constructor
-module.exports.Referee = function (client1, client2) {
-	// Inherit from Events.EventEmitter.
+	  clickWinCount = 50,
+	  countDownStart = 5;
+
+var Referee = function (client1, client2) {
+	var player1,
+		player2,
+		thisReferee = this; // Used to preserve the value of 'this' in refLog().
+
 	EventEmitter.call(this);
 
-	var player1 = new Player(client1);
-	var player2 = new Player(client2);
-	var refName = client1.remoteAddress + "vs" + client2.remoteAddress;
-
-	function refLog (msg, level) {
+	var refLog = function (msg, level) {
 		if (level === undefined) {
 			level = logging.DEBUG;
 		}
-		log(refName + ' => ' + msg, level);
-	}
+		log(thisReferee.name + ' => ' + msg, level);
+	};
 
-	function Player (client) {
-		this.clicks = 0;
-		this.client = client;
-		this.name = undefined;
-
-		this.click = function () {
-			this.clicks++;
-			refLog(playerName + ' ' + clicks);
-			return this.clicks;
-		};
-	}
-
-	function enterNamingState () {
-		function checkPlayers () {
-			if (player1 !== undefined && player2 !== undefined) {
-				client1.matched(player2.getName());
-				client2.matched(player1.getName());
+	var enterNamingState = function () {
+		function checkNames () {
+			if (player1.name !== undefined && player2.name !== undefined) {
+				player1.matched(player2.name);
+				player2.matched(player1.name);
 
 				enterCountingState();
 			}
-		}
+		};
 
-		client1.once('name', function createPlayer1 (name) {
+		player1.once('name', function createPlayer1 (name) {
 			refLog('Got a name.');
-			player1 = new Player(client1, name);
-			checkPlayers();
+			player1.name = name;
+			checkNames();
 		});
-		client2.once('name', function createPlayer2 (name) {
+		player2.once('name', function createPlayer2 (name) {
 			refLog('Got a name.');
-			player2 = new Player(client2, name);
-			checkPlayers();
+			player2.name = name;
+			checkNames();
 		});
 
-		client1.namePlease();
-		client2.namePlease();
+		player1.namePlease();
+		player2.namePlease();
 		refLog('Waiting for names.');
-	}
+	};
 
-	function enterCountingState () {
+	var enterCountingState = function () {
 		var value = countDownStart;
 
 		var intervalID = setInterval(function countingDown () {
 			refLog('Counting ' + value);
-			client1.countDown(value);
-			client2.countDown(value);
+			player1.countDown(value);
+			player2.countDown(value);
 
 			if (value === 0) {
 				clearInterval(intervalID);
@@ -80,54 +65,59 @@ module.exports.Referee = function (client1, client2) {
 				value--;
 			}
 		}, 1000);
-	}
+	};
 
-	function enterGamingState () {
-		function endGame(player1Won) {
-			// TODO - Can we still removed the listeners.
-			client1.removeListener('click', squeeze1);
-			client2.removeListener('click', squeeze2);
-			enterDoneState(player1Won);
-		}
+	var enterGamingState = function () {
+		var endGame = function (winningPlayer) {
+			player1.removeListener('click', player1.click);
+			player2.removeListener('click', player2.click);
 
-		client1.on('click', function click1 () {
-			if (player1.click() >= clickWinCount) {
-				endGame(true);
+			enterDoneState(winningPlayer === player1);
+		};
+
+		var click = function () {
+			this.clickCount++;
+			if (this.clickCount >= clickWinCount) {
+				endGame(this);
 			}
-		});
-		client2.on('click', function click2 () {
-			if (player2.click() >= clickWinCount) {
-				endGame(false);
-			}
-		});
-	}
+		};
 
-	function enterDoneState(player1Won) {
+		player1.click = player2.click = click;
+		player1.on('click', player1.click);
+		player2.on('click', player2.click);
+	};
+
+	var enterDoneState = function (player1Won) {
 		var winner;
 		if (player1Won) {
-			winner = player1.getName();
+			winner = player1.name;
 		}
 		else {
-			winner = player2.getName();
+			winner = player2.name;
 		}
 		refLog(winner + ' won!');
 
-		client1.gameOver(player1Won);
-		client2.gameOver(!player1Won);
+		player1.gameOver(player1Won);
+		player2.gameOver(!player1Won);
 
-		client1.close(1000, 'Game over');
-		client2.close(1000, 'Game over');
+		thisReferee.emit('gameOver');
+	};
 
-		ref.emit('gameOver');
-	}
+	var createPlayer = function (client) {
+		var player = client;
+		player.name = undefined;
+		player.clickCount = 0;
+		return player;
+	};
+
+	player1 = createPlayer(client1);
+	player2 = createPlayer(client2);
 
 	this.player1 = player1;
 	this.player2 = player2;
-	this.getName = function () {
-		return refName;
-	};
+	this.name = player1.remoteAddress + 'vs' + player2.remoteAddress;
 	this.startGame = enterNamingState;
-
-	log('New game created: ' + this.name);
 };
-util.inherits(module.exports.Referee, EventEmitter);
+util.inherits(Referee, EventEmitter);
+
+module.exports = Referee;
