@@ -112,7 +112,6 @@ describe('Server To Client WebSocket Wrapper', function testS2CWrapper () {
 	});
 
 	it('gameOver()', function gameOverTest (done) {
-		debugger;
 		this.timeout(5000);
 		var theWin = true;
 		var gameOverRecievedFirst = false;
