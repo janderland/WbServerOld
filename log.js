@@ -1,6 +1,4 @@
-// Wish Banana
-// Log
-// Sets up logging.
+'use strict';
 
 var moment = require('moment');
 var fs = require('fs');
@@ -12,7 +10,7 @@ var levelFilter = 3;
 var levelNames = ['ERROR', 'WARNING', 'INFO', 'DEBUG'];
 var log_stdout = process.stdout;
 
-function getTime () { return moment().format('YYMMDD_HHmmss'); }
+var getTime = function () { return moment().format('YYMMDD_HHmmss'); };
 
 var name = getTime();
 var dir = __dirname + '/logs/';
@@ -32,14 +30,13 @@ catch (err) {
 }
 var log_file = fs.createWriteStream(dir+ name + '.log', {flags : 'w'});
 
-// Overload the log function with out custom one.
-console.log = function (msg) {
-	var time = getTime() + ': ';
-	log_file.write(time + util.format(msg) + '\n');
-	log_stdout.write(time + util.format(msg) + '\n');
+var newLog = function (msg) {
+    var time = getTime() + ': ';
+    log_file.write(time + util.format(msg) + '\n');
+    log_stdout.write(time + util.format(msg) + '\n');
 };
 
-module.exports.getLoggingHandle = function (module, showLevel) {
+module.exports = function createLogging (module, showLevel) {
     if (showLevel !== undefined) {
         showLevel = true;
     }
@@ -56,7 +53,7 @@ module.exports.getLoggingHandle = function (module, showLevel) {
                     msgStr += ' ' + levelNames[level];
                 }
                 msgStr += ' ' + msg + '\n';
-                console.log(msgStr);
+                newLog(msgStr);
             }
         },
         stringify: function (obj) {
