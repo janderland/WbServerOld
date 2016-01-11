@@ -1,0 +1,6 @@
+{
+	"es5": true,
+	"esnext": true,
+	"moz": true,
+	"node": true
+}
