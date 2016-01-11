@@ -3,7 +3,7 @@
 const should = require('should'),
 	  util = require('util'),
 	  EventEmitter = require('events'),
-	  Referee = require('../Referee.js'),
+	  Referee = require('../Referee'),
 
 	  verbose = true;
 
