@@ -1,60 +1,55 @@
-// Wish Banana
-// Unit Test for server2Client.js
+'use strict';
 
 var http = require('http');
 var webSocket = require('websocket');
 var should = require('should');
 var EventEmitter = require('events').EventEmitter;
 var util = require('util');
-var S2CWrapper = require('../server2Client.js').S2CWrapper;
-var C2SWrapper = require('./client2Server_node.js').C2SWrapper;
-var messages = require('../messages.js');
+
+var messages = require('../messages');
+var Server = require('./client2Server_node')(messages);
+var Client = require('../server2Client')(messages);
 
 var port = 9999;
-
-function log (msg) {
-	console.log('\t' + msg);
-}
 
 describe('Server To Client WebSocket Wrapper', function testS2CWrapper () {
 	var httpServer;
 	var webSocketServer;
 	var webSocketClient;
-	var theS2CWrapper;
-	var theClient;
+	var server2Client;
+	var client2Server;
+	var remoteAddress;
+
+	var checkIfDone;
+	var connect = function (complete) {
+		checkIfDone = function () {
+			if (server2Client !== undefined && client2Server !== undefined) {
+				complete();
+			}
+		};
+
+		webSocketClient.connect('ws://127.0.0.1:' + port, ['wishbanana']);
+	};
 
 	before(function before (done) {
-		var serverDone = false;
-		var clientDone = false;
-
-		function checkIfDone () {
-			if (serverDone && clientDone) {
-				done();
-			}
-		}
-
 		httpServer = http.createServer();
-		httpServer.listen(port, function onHttpListening () {
-		    log('Server is listening on port ' + port);
-		});
+		httpServer.listen(port, function onHttpListening () {});
 
 		webSocketServer = new webSocket.server({ httpServer: httpServer });
-		webSocketServer.once('request', function onFirstRequestFromClient (request) {
+		webSocketServer.on('request', function onConnectionFromClient (request) {
 		    var conn = request.accept('wishbanana', request.origin);
-		    log('Connection from ' + conn.remoteAddress + ' accepted.');
-
-		    theS2CWrapper = new S2CWrapper(conn);
-		    serverDone = true;
+		    remoteAddress = conn.remoteAddress;
+		    server2Client = new Client(conn);
 		    checkIfDone();
 		});
 
 		webSocketClient = new webSocket.client();
 		webSocketClient.on('connect', function onConnectionToServer (conn) {
-			theClient = new C2SWrapper(conn);
-			clientDone = true;
+			client2Server = new Server(conn);
 			checkIfDone();
 		});
-		webSocketClient.connect('ws://127.0.0.1:' + port, ['wishbanana']);
+
+		connect(done);
 	});
 
 	after(function after () {
@@ -62,71 +57,88 @@ describe('Server To Client WebSocket Wrapper', function testS2CWrapper () {
 		httpServer.close();
 	});
 
-	it('isOpen()', function isOpenTest () {
-		(theS2CWrapper.isOpen()).should.be.true();
+	it('connected', function connectedTest () {
+		(server2Client.connected).should.be.true();
+	});
+
+	it('remoteAddress', function remoteAddressTest () {
+		(server2Client.remoteAddress).should.equal(remoteAddress);
 	});
 
 	it('namePlease()', function namePleaseTest (done) {
-		theClient.once('namePlease', function () {
+		client2Server.once('namePlease', function () {
 			done();
 		});
 
-		theS2CWrapper.namePlease();
+		server2Client.namePlease();
 	});
 
 	it('matched()', function matchedTest (done) {
 		var theName = 'Peter';
-		theClient.once('matched', function (name) {
+		client2Server.once('matched', function (name) {
 			(name).should.equal(theName);
 			done();
 		});
 
-		theS2CWrapper.matched(theName);
+		server2Client.matched(theName);
 	});
 
 	it('countDown()', function countDownTest (done) {
 		var theValue = 100;
-		theClient.once('countDown', function (value) {
+		client2Server.once('countDown', function (value) {
 			(value).should.equal(theValue);
 			done();
 		});
 
-		theS2CWrapper.countDown(theValue);
-	});
-
-	it('gameOver()', function gameOverTest (done) {
-		var theWin = true;
-		theClient.once('gameOver', function (win) {
-			(win).should.equal(theWin);
-			done();
-		});
-
-		theS2CWrapper.gameOver(theWin);
+		server2Client.countDown(theValue);
 	});
 
 	it('onName', function onNameTest (done) {
 		var theName = 'Roger';
-		theS2CWrapper.once('name', function onName (name) {
+		server2Client.once('name', function onName (name) {
 			(name).should.equal(theName);
 			done();
 		});
 
-		theClient.name(theName);
+		client2Server.name(theName);
 	});
 
-	it('onSqueeze', function onSqueezeTest (done) {
-		theS2CWrapper.once('squeeze', function onSqueeze () {
+	it('onClick', function onClickTest (done) {
+		server2Client.once('click', function onClick () {
 			done();
 		});
 
-		theClient.squeeze();
+		client2Server.click();
 	});
 
-	it('close()', function closeTest (done) {
-		theClient.once('close', function () {
+	it('gameOver()', function gameOverTest (done) {
+		debugger;
+		this.timeout(5000);
+		var theWin = true;
+		var gameOverRecievedFirst = false;
+
+		client2Server.once('gameOver', function (win) {
+			gameOverRecievedFirst = true;
+			(win).should.equal(theWin);
+		});
+
+		client2Server.once('close', function (reasonCode, description) {
+			(gameOverRecievedFirst).should.be.true;
+			(description).should.equal('Game over.');
 			done();
 		});
 
-		theS2CWrapper.close();
+		server2Client.gameOver(theWin);
+	});
+
+	it('drop()', function dropTest (done) {
+		this.timeout(5000);
+		connect(function connectComplete () {
+			client2Server.once('close', function (reasonCode, description) {
+				done();
+			});
+
+			server2Client.drop();
+		});
 	});
 });

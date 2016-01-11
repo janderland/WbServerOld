@@ -1,69 +1,68 @@
-// Wish Banana
-// Client To Server Connection Wrapper - NodeJS
-// Wraps the server-to-client websocket connection, providing syntax sugar and convenience functions.
-// NOTE: This is a NodeJS compatible version of the original C2SWrapper object used for testing purposes.
+'use strict';
 
 var util = require('util');
-var EventEmitter = require('events').EventEmitter;
-var messages = require('../messages.js');
+var EventEmitter = require('events');
 
-module.exports.C2SWrapper = function (conn) {
-	// Inherit from EventEmitter
-	EventEmitter.call(this);
+module.exports = function (messages) {
+	var Server = function (conn) {
+		// Used to preserve the 'this' value in the 'onMessage' handler.
+		var thisServer = this;
+		EventEmitter.call(this);
 
-	var thisWrapper = this;
+		var sendMessage = function (message) {
+			conn.send(JSON.stringify(message));
+		};
 
-	function sendMessage (msg) {
-		conn.send(JSON.stringify(msg));
-	}
+		conn.on('message', function onMessage (rawMessage) {
+			var message;
 
-	conn.on('message', function onMessage (rawMsg) {
-		var msg;
+			// We only accept messages of utf8 type.
+			if (rawMessage.type == 'utf8') {
+				try {
+					message = JSON.parse(rawMessage.utf8Data);
+				}
+				catch (error) {
+					thisServer.emit('error', error, rawMessage.utf8Data);
+					return;
+				}
 
-		// We only accept messages of utf8 type because we only accept JSON message.
-		if (rawMsg.type == 'utf8') {
-			try {
-				msg = JSON.parse(rawMsg.utf8Data);
-			}
-			catch (err) {
-				thisWrapper.emit('receiveError', err, rawMsg.utf8Data);
-				return;
-			}
-
-			var id = msg.id;
-			if (id == messages.MESSAGE_ID.NamePlease) {
-				thisWrapper.emit('namePlease');
-			}
-			else if (id == messages.MESSAGE_ID.Matched) {
-				thisWrapper.emit('matched', msg.opponentName);
-			}
-			else if (id == messages.MESSAGE_ID.CountDown) {
-				thisWrapper.emit('countDown', msg.value);
-			}
-			else if (id == messages.MESSAGE_ID.GameOver) {
-				thisWrapper.emit('gameOver', msg.won);
+				var id = message.id;
+				if (id == messages.ids.NamePlease) {
+					thisServer.emit('namePlease');
+				}
+				else if (id == messages.ids.Matched) {
+					thisServer.emit('matched', message.opponentName);
+				}
+				else if (id == messages.ids.CountDown) {
+					thisServer.emit('countDown', message.value);
+				}
+				else if (id == messages.ids.GameOver) {
+					thisServer.emit('gameOver', message.won);
+				}
+				else {
+					thisServer.emit('error', 'Invalid message ID.', rawMessage.utf8Data);
+				}
 			}
 			else {
-				thisWrapper.emit('receiveError', 'Invalid message type.', rawMsg.utf8Data);
+				thisServer.emit('error', 'Invalid rawMessage type.', util.inspect(rawMessage));
 			}
-		}
-		else {
-			thisWrapper.emit('receiveError', 'Invalid rawMsg type: ' + rawMsg.type + '.', '');
-		}
-	});
+		});
 
-	conn.on('close', function onClose () {
-		thisWrapper.emit('close');
-	});
+		conn.on('close', function onClose (reasonCode, description) {
+			thisServer.emit('close', reasonCode, description);
+		});
 
-	this.name = function (name) {
-		sendMessage(new messages.Name(name));
+		this.name = function (name) {
+			sendMessage(new messages.Name(name));
+		};
+
+		this.click = function () {
+			sendMessage(new messages.Click());
+		};
+
+		this.remoteAddress = conn.remoteAddress;
 	};
+	util.inherits(Server, EventEmitter);
 
-	this.squeeze = function () {
-		sendMessage(new messages.Squeeze());
-	};
-
-	this.remoteAddress = conn.remoteAddress;
+	return Server;
 };
-util.inherits(module.exports.C2SWrapper, EventEmitter);
