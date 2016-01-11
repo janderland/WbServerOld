@@ -1,14 +1,18 @@
-// Wish Banana
-// Game Server
-// Entry point for the wish banana server.
+'use strict';
 
-var logging = require('./log.js').getLoggingHandle('gameServer');
-var log = logging.log;
-var WebSocketServer = require('websocket').server;
-var http = require('http');
-var queueToPlay = require('./matchMaker.js').queueToPlay;
+const logging = require('./log')('gameServer'),
+      log = logging.log;
 
-var port = 3456;
+const WebSocketServer = require('websocket').server,
+      http = require('http'),
+
+      messages = require('./messages'),
+      Client = require('./server2Client')(messages),
+      Referee = require('./referee'),
+      matchMaker = require('./matchMaker')(Client, Referee),
+
+      port = 3456;
+
 var conns = {};
 
 var httpServer = http.createServer();
@@ -22,7 +26,7 @@ wsServer.on('request', function onConnectionRequest (request) {
 
     // Drop the old connection if this IP already has one.
     if (addr in conns) {
-        conns[addr].drop(1000, 'New connection established.');
+        conns[addr].drop(conn.CLOSE_REASON_NORMAL, 'New connection established.');
         log('Dropping connection to ' + addr + ' for new connection.', logging.DEBUG);
     }
 
@@ -30,11 +34,12 @@ wsServer.on('request', function onConnectionRequest (request) {
     log('Connection from ' + addr + ' accepted.', logging.DEBUG);
 
     conn.on('close', function onConnectionClose (reasonCode, description) {
-        log('Client ' + conn.remoteAddress + ' disconnected. Code: ' + reasonCode + '. Desc: ' + description);
+        log('Client ' + conn.remoteAddress + ' disconnected. Code: ' + reasonCode + '. Desc: ' + description,
+            logging.DEBUG);
         delete conns[addr];
     });
 
-    var ref = queueToPlay(conn);
+    var ref = matchMaker.queueToPlay(conn);
     if (ref !== null) {
         ref.startGame();
     }
