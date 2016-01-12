@@ -1,15 +1,17 @@
 'use strict';
 
-const logging = require('./log')('gameServer'),
-      log = logging.log;
+const singleplayer = true,
 
-const WebSocketServer = require('websocket').server,
+      logging = require('./log')('gameServer'),
+      log = logging.log,
+
+      WebSocketServer = require('websocket').server,
       http = require('http'),
 
       messages = require('./messages'),
       Client = require('./server2Client')(messages),
       Referee = require('./referee'),
-      matchMaker = require('./matchMaker')(Client, Referee),
+      matchMaker = require('./matchMaker')(Client, Referee, singleplayer),
 
       port = 3456;
 

@@ -423,6 +423,46 @@
 	},
 	"buffers":
 	[
+		{
+			"file": "referee.js",
+			"settings":
+			{
+				"buffer_size": 2655,
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "server2Client.js",
+			"settings":
+			{
+				"buffer_size": 2232,
+				"line_ending": "Windows"
+			}
+		},
+		{
+			"file": "matchMaker.js",
+			"settings":
+			{
+				"buffer_size": 840,
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "package.json",
+			"settings":
+			{
+				"buffer_size": 63,
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "gameServer.js",
+			"settings":
+			{
+				"buffer_size": 1518,
+				"line_ending": "Windows"
+			}
+		}
 	],
 	"build_system": "",
 	"build_system_choices":
@@ -509,8 +549,11 @@
 	],
 	"file_history":
 	[
-		"/Users/littlejon/Source/WishBanana/server/matchMaker.js",
+		"/Users/littlejon/Source/WishBanana/server/npm-debug.log",
 		"/Users/littlejon/Source/WishBanana/server/gameServer.js",
+		"/Users/littlejon/Source/WishBanana/server/package.json",
+		"/Users/littlejon/Source/WishBanana/server/.gitignore",
+		"/Users/littlejon/Source/WishBanana/server/matchMaker.js",
 		"/Users/littlejon/Source/WishBanana/server/test/test2_matchMaker.js",
 		"/Users/littlejon/Source/WishBanana/server/test/test1_referee.js",
 		"/Users/littlejon/Source/WishBanana/server/server2Client.js",
@@ -523,7 +566,6 @@
 		"/Users/littlejon/Library/Application Support/Sublime Text 3/Packages/User/Package Control.sublime-settings",
 		"/Users/littlejon/Library/Application Support/Sublime Text 3/Packages/User/SublimeLinter.sublime-settings",
 		"/Users/littlejon/Library/Application Support/Sublime Text 3/Packages/User/Preferences.sublime-settings",
-		"/Users/littlejon/Source/WishBanana/server/npm-debug.log",
 		"/Users/littlejon/Source/SkyCrow/SkyCrowGum.cpp",
 		"/Users/littlejon/Source/WishBanana/server/logging.js",
 		"/Users/littlejon/Source/WishBanana/server/utilities.js",
@@ -606,6 +648,7 @@
 		"case_sensitive": true,
 		"find_history":
 		[
+			"singlePlayerGames",
 			"debugg",
 			"debug",
 			"Client",
@@ -703,6 +746,7 @@
 		"regex": false,
 		"replace_history":
 		[
+			"singleplayer",
 			"thisClient",
 			"var",
 			"remoteAddress",
@@ -764,8 +808,154 @@
 	"groups":
 	[
 		{
+			"selected": 4,
 			"sheets":
 			[
+				{
+					"buffer": 0,
+					"file": "referee.js",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 2655,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								381,
+								381
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/JavaScript/JavaScript.tmLanguage",
+							"translate_tabs_to_spaces": false
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 1,
+					"type": "text"
+				},
+				{
+					"buffer": 1,
+					"file": "server2Client.js",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 2232,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								516,
+								516
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/JavaScript/JavaScript.tmLanguage",
+							"translate_tabs_to_spaces": false
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 4,
+					"type": "text"
+				},
+				{
+					"buffer": 2,
+					"file": "matchMaker.js",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 840,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								824,
+								824
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/JavaScript/JavaScript.tmLanguage",
+							"translate_tabs_to_spaces": false
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 3,
+					"type": "text"
+				},
+				{
+					"buffer": 3,
+					"file": "package.json",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 63,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								16,
+								16
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/JavaScript/JSON.tmLanguage"
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 2,
+					"type": "text"
+				},
+				{
+					"buffer": 4,
+					"file": "gameServer.js",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 1518,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								406,
+								406
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/JavaScript/JavaScript.tmLanguage",
+							"tab_size": 2,
+							"translate_tabs_to_spaces": true
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 0,
+					"type": "text"
+				}
 			]
 		}
 	],

@@ -1,4 +1,4 @@
 {
-	"name": "Wish Banana Game Server",
+	"name": "WishBananaGameServer",
 	"main": "./gameServer.js"
 }

@@ -24,7 +24,7 @@ var Referee = function (client1, client2) {
 	};
 
 	var enterNamingState = function () {
-		function checkNames () {
+		var checkNames = function () {
 			if (player1.name !== undefined && player2.name !== undefined) {
 				player1.matched(player2.name);
 				player2.matched(player1.name);

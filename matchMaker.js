@@ -3,13 +3,17 @@
 const logging = require('./log')('matchMaker'),
 	  log = logging.log;
 
-module.exports = function getMatchMaker (Client, Referee) {
+module.exports = function getMatchMaker (Client, Referee, singleplayer) {
+	if (singleplayer === undefined) {
+		singleplayer = false;
+	}
+
 	var waitingConn = null;
 
 	return {
 		referees: {},
 		queueToPlay: function (conn) {
-			if (!waitingConn) {
+			if (!singleplayer && !waitingConn) {
 				log('Connection waiting.', logging.DEBUG);
 				waitingConn = conn;
 				return null;
