@@ -3,21 +3,8 @@
 const EventEmitter = require('events');
 const util = require('util');
 
-const log = require('./log')('server2Client').log;
-
 module.exports = function (messages) {
 	var Client = function (conn) {
-		// If we are passed null, this is to be a dummy Client. So we create a
-		// dummy connection.
-		if (conn === null) {
-			conn = new EventEmitter();
-			conn.connected = true;
-
-			// This IP is 'reserved for future use' and therefore should never
-			// lead anywhere.
-			conn.remoteAddress = '240.0.0.0';
-		}
-
 		// Used to preserve the 'this' value in the 'onMessage' handler.
 		var thisClient = this;
 		EventEmitter.call(this);
@@ -89,5 +76,14 @@ module.exports = function (messages) {
 	};
 	util.inherits(Client, EventEmitter);
 
-	return Client;
+	var NullClient = function () {
+		EventEmitter.call(this);
+		// TODO
+	};
+	util.inherits(NullClient, EventEmitter);
+
+	return {
+		Client: Client,
+		NullClient: NullClient
+	};
 };

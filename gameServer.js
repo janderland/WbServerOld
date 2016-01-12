@@ -1,19 +1,22 @@
 'use strict';
 
-const singleplayer = true,
-
-      logging = require('./log')('gameServer'),
+const logging = require('./log')('gameServer'),
       log = logging.log,
 
       WebSocketServer = require('websocket').server,
       http = require('http'),
 
       messages = require('./messages'),
-      Client = require('./server2Client')(messages),
-      Referee = require('./referee'),
-      matchMaker = require('./matchMaker')(Client, Referee, singleplayer),
+      server2Client = require('./server2Client')(messages),
 
-      port = 3456;
+      Client = server2Client.Client,
+      NullClient = server2Client.NullClient,
+      Referee = require('./referee'),
+
+      matchMaker = require('./matchMaker')(Client, NullClient, Referee),
+
+      port = 3456,
+      singleplayer = true;
 
 var conns = {};
 
@@ -46,3 +49,5 @@ wsServer.on('request', function onConnectionRequest (request) {
         ref.startGame();
     }
 });
+
+matchMaker.singleplayer = singleplayer;

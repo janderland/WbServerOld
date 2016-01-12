@@ -3,24 +3,22 @@
 const logging = require('./log')('matchMaker'),
 	  log = logging.log;
 
-module.exports = function getMatchMaker (Client, Referee, singleplayer) {
-	if (singleplayer === undefined) {
-		singleplayer = false;
-	}
-
+module.exports = function getMatchMaker (Client, NullClient, Referee) {
 	var waitingConn = null;
 
 	return {
 		referees: {},
 		queueToPlay: function (conn) {
-			if (!singleplayer && !waitingConn) {
+			const mp = !this.singleplayer;
+
+			if (mp && !waitingConn) {
 				log('Connection waiting.', logging.DEBUG);
 				waitingConn = conn;
 				return null;
 			}
 			else {
 				var client1 = new Client(conn);
-				var client2 = new Client(waitingConn);
+				var client2 = (mp ? new Client(waitingConn) : new NullClient());
 
 				waitingConn = null;
 
@@ -36,6 +34,7 @@ module.exports = function getMatchMaker (Client, Referee, singleplayer) {
 
 				return ref;
 			}
-		}
+		},
+		singleplayer: false
 	};
 };

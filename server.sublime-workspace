@@ -435,7 +435,7 @@
 			"file": "server2Client.js",
 			"settings":
 			{
-				"buffer_size": 2232,
+				"buffer_size": 2114,
 				"line_ending": "Windows"
 			}
 		},
@@ -444,14 +444,6 @@
 			"settings":
 			{
 				"buffer_size": 840,
-				"line_ending": "Unix"
-			}
-		},
-		{
-			"file": "package.json",
-			"settings":
-			{
-				"buffer_size": 63,
 				"line_ending": "Unix"
 			}
 		},
@@ -549,9 +541,9 @@
 	],
 	"file_history":
 	[
+		"/Users/littlejon/Source/WishBanana/server/package.json",
 		"/Users/littlejon/Source/WishBanana/server/npm-debug.log",
 		"/Users/littlejon/Source/WishBanana/server/gameServer.js",
-		"/Users/littlejon/Source/WishBanana/server/package.json",
 		"/Users/littlejon/Source/WishBanana/server/.gitignore",
 		"/Users/littlejon/Source/WishBanana/server/matchMaker.js",
 		"/Users/littlejon/Source/WishBanana/server/test/test2_matchMaker.js",
@@ -648,6 +640,7 @@
 		"case_sensitive": true,
 		"find_history":
 		[
+			"log",
 			"singlePlayerGames",
 			"debugg",
 			"debug",
@@ -808,7 +801,7 @@
 	"groups":
 	[
 		{
-			"selected": 4,
+			"selected": 1,
 			"sheets":
 			[
 				{
@@ -846,15 +839,15 @@
 					"semi_transient": false,
 					"settings":
 					{
-						"buffer_size": 2232,
+						"buffer_size": 2114,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								516,
-								516
+								394,
+								394
 							]
 						],
 						"settings":
@@ -866,7 +859,7 @@
 						"translation.y": 0.0,
 						"zoom_level": 1.0
 					},
-					"stack_index": 4,
+					"stack_index": 0,
 					"type": "text"
 				},
 				{
@@ -900,34 +893,6 @@
 				},
 				{
 					"buffer": 3,
-					"file": "package.json",
-					"semi_transient": false,
-					"settings":
-					{
-						"buffer_size": 63,
-						"regions":
-						{
-						},
-						"selection":
-						[
-							[
-								16,
-								16
-							]
-						],
-						"settings":
-						{
-							"syntax": "Packages/JavaScript/JSON.tmLanguage"
-						},
-						"translation.x": 0.0,
-						"translation.y": 0.0,
-						"zoom_level": 1.0
-					},
-					"stack_index": 2,
-					"type": "text"
-				},
-				{
-					"buffer": 4,
 					"file": "gameServer.js",
 					"semi_transient": false,
 					"settings":
@@ -953,7 +918,7 @@
 						"translation.y": 0.0,
 						"zoom_level": 1.0
 					},
-					"stack_index": 0,
+					"stack_index": 2,
 					"type": "text"
 				}
 			]
