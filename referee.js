@@ -12,6 +12,7 @@ const util = require('util'),
 var Referee = function (client1, client2) {
 	var player1,
 		player2,
+		intervalID,
 		thisReferee = this; // Used to preserve the value of 'this' in refLog().
 
 	EventEmitter.call(this);
@@ -44,6 +45,9 @@ var Referee = function (client1, client2) {
 			checkNames();
 		});
 
+		player1.winCount(clickWinCount);
+		player2.winCount(clickWinCount);
+
 		player1.namePlease();
 		player2.namePlease();
 		refLog('Waiting for names.');
@@ -52,7 +56,7 @@ var Referee = function (client1, client2) {
 	var enterCountingState = function () {
 		var value = countDownStart;
 
-		var intervalID = setInterval(function countingDown () {
+		intervalID = setInterval(function countingDown () {
 			refLog('Counting ' + value);
 			player1.countDown(value);
 			player2.countDown(value);
@@ -75,10 +79,19 @@ var Referee = function (client1, client2) {
 			enterDoneState(winningPlayer === player1);
 		};
 
+		// TODO - Throttle count update messages?
+		var sendClickCount = function () {
+			player1.clickCount(player1.count, player2.count);
+			player2.clickCount(player2.count, player1.count);
+		};
+
 		var click = function () {
-			this.clickCount++;
-			if (this.clickCount >= clickWinCount) {
+			this.count++;
+			if (this.count >= clickWinCount) {
 				endGame(this);
+			}
+			else {
+				sendClickCount();
 			}
 		};
 
@@ -97,6 +110,11 @@ var Referee = function (client1, client2) {
 		}
 		refLog(winner + ' won!');
 
+		clearInterval(intervalID);
+
+		player1.removeAllListeners();
+		player2.removeAllListeners();
+
 		player1.gameOver(player1Won);
 		player2.gameOver(!player1Won);
 
@@ -106,12 +124,19 @@ var Referee = function (client1, client2) {
 	var createPlayer = function (client) {
 		var player = client;
 		player.name = undefined;
-		player.clickCount = 0;
+		player.count = 0;
 		return player;
+	};
+
+	var onPlayerClose = function () {
+		enterDoneState(this === player2);
 	};
 
 	player1 = createPlayer(client1);
 	player2 = createPlayer(client2);
+
+	player1.on('close', onPlayerClose);
+	player2.on('close', onPlayerClose);
 
 	this.player1 = player1;
 	this.player2 = player2;

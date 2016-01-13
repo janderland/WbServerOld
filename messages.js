@@ -12,11 +12,18 @@ define(function messagesModule () {
 		Click:      2,
 		GameOver:   3,
 		Name:       4,
-		NamePlease: 5
+		NamePlease: 5,
+		ClickCount: 6,
+		WinCount:   7
 	};
 
 	var Message = function (type) {
 		this.id = ids[type];
+	};
+
+	var WinCount = function (count) {
+		Message.call(this, 'WinCount');
+		this.count = count;
 	};
 
 	var NamePlease = function () {
@@ -42,6 +49,12 @@ define(function messagesModule () {
 		Message.call(this, 'Click');
 	};
 
+	var ClickCount = function (yourCount, theirCount) {
+		Message.call(this, 'ClickCount');
+		this.yourCount = yourCount;
+		this.theirCount = theirCount;
+	};
+
 	var GameOver = function (won) {
 		Message.call(this, 'GameOver');
 		this.won = won;
@@ -54,6 +67,8 @@ define(function messagesModule () {
 		GameOver:	GameOver,
 		Name:		Name,
 		NamePlease:	NamePlease,
+		ClickCount: ClickCount,
+		WinCount:   WinCount,
 		ids:	    ids
 	};
 });

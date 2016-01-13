@@ -9,7 +9,9 @@ module.exports = function getMatchMaker (Client, NullClient, Referee) {
 	return {
 		referees: {},
 		queueToPlay: function (conn) {
-			const mp = !this.singleplayer;
+			const mp = !this.singleplayer,
+				  // Used to preserve the value of 'this' in ref event handlers.
+				  thisMatchMaker = this;
 
 			if (mp && !waitingConn) {
 				log('Connection waiting.', logging.DEBUG);
@@ -25,11 +27,11 @@ module.exports = function getMatchMaker (Client, NullClient, Referee) {
 				var ref = new Referee(client1, client2);
 				this.referees[ref.name] = ref;
 
-				log("Game started: " + ref.name);
+				log("Game started => " + ref.name);
 
 				ref.once('gameOver', function onGameOver () {
-					log('Game ended: ' + ref.name);
-					delete this.referees[ref.name];
+					log('Game ended => ' + ref.name);
+					delete thisMatchMaker.referees[ref.name];
 				});
 
 				return ref;

@@ -46,6 +46,11 @@ module.exports = function (messages) {
 			thisClient.emit('close', reasonCode, description);
 		});
 
+		this.winCount = function (count) {
+			var message = new messages.WinCount(count);
+			send(message);
+		};
+
 		this.namePlease = function () {
 			var message = new messages.NamePlease();
 			send(message);
@@ -58,6 +63,11 @@ module.exports = function (messages) {
 
 		this.countDown = function (value) {
 			var message = new messages.CountDown(value);
+			send(message);
+		};
+
+		this.clickCount = function (yourCount, theirCount) {
+			var message = new messages.ClickCount(yourCount, theirCount);
 			send(message);
 		};
 
@@ -78,7 +88,29 @@ module.exports = function (messages) {
 
 	var NullClient = function () {
 		EventEmitter.call(this);
-		// TODO
+		var intervalId,
+			thisClient = this;
+
+		this.winCount = function () {};
+		this.namePlease = function () {
+			this.emit('name', 'NULL');
+		};
+		this.matched = function () {};
+		this.countDown = function (count) {
+			if (count === 0) {
+				intervalId = setInterval(function nullClick () {
+					thisClient.emit('click');
+				}, 500);
+			}
+		};
+		this.clickCount = function () {};
+		this.gameOver = function () {
+			clearInterval(intervalId);
+		};
+		this.drop = function () {};
+
+		this.connected = true;
+		this.remoteAddress = 'NULL';
 	};
 	util.inherits(NullClient, EventEmitter);
 
