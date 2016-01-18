@@ -1,4 +1,26 @@
 {
-	"name": "WishBananaGameServer",
-	"main": "./gameServer.js"
+	"name": "wishbanana",
+	"version": "0.0.1",
+	"description": "Wish Banana Game Server",
+	"author": "Jon Anderson <jon.david.anderson@gmail.com>",
+	"bin": "./gameServer.js",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/chronzerg/wbServer"
+	},
+	"bugs": {
+		"url": "https://github.com/chronzerg/wbServer/issues"
+	},
+	"dependencies": {
+		"websocket": "1.x",
+		"amdefine": "1.x",
+		"moment": "2.x"
+	},
+	"devDependencies": {
+		"should": "8.x",
+		"mocha": "2.x"
+	},
+	"engines": {
+		"node": "5.4.0"
+	}
 }

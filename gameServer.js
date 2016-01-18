@@ -16,7 +16,7 @@ const logging = require('./log')('gameServer'),
       matchMaker = require('./matchMaker')(Client, NullClient, Referee),
 
       port = 3456,
-      singleplayer = true;
+      singleplayer = false;
 
 var conns = {};
 
