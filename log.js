@@ -31,19 +31,8 @@ module.exports = function createLogging (module, showModule, showLevel) {
                     msgStr += levelNames[level] + '::';
                 }
                 msgStr += msg;
-                process.stdout.write(util.format(msgStr));
+                console.log(msgStr);
             }
-        },
-        stringify: function (obj) {
-            var string = '';
-            try {
-                string = JSON.stringify(obj);
-            }
-            catch (e) {
-                this.log('Failed to stringify object.', this.WARNING);
-                string = typeof obj;
-            }
-            return string;
         },
         filter: function (filters) {
             if (filters.module !== undefined) {
