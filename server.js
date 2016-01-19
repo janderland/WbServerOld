@@ -29,6 +29,12 @@ var wsServer = new WebSocketServer({ httpServer: httpServer });
 wsServer.on('request', function onConnectionRequest (request) {
     var addr = request.remoteAddress;
 
+    // TODO - Make sure long lists of protocols won't block our app
+    if (request.requestedProtocols.indexOf('wishbanana') === -1) {
+        request.reject();
+        return;
+    }
+
     // Drop the old connection if this IP already has one.
     if (addr in conns) {
         conns[addr].drop(conn.CLOSE_REASON_NORMAL, 'New connection established.');
@@ -39,7 +45,7 @@ wsServer.on('request', function onConnectionRequest (request) {
     log('Connection from ' + addr + ' accepted.', logging.DEBUG);
 
     conn.on('close', function onConnectionClose (reasonCode, description) {
-        log('Client ' + conn.remoteAddress + ' disconnected. Code: ' + reasonCode + '. Desc: ' + description,
+        log('Client ' + conn.remoteAddress + ' disconnected. Code: ' + reasonCode + '. Desc: ' + description, 
             logging.DEBUG);
         delete conns[addr];
     });

@@ -1,6 +1,5 @@
 'use strict';
 
-var moment = require('moment');
 var fs = require('fs');
 var util = require('util');
 
@@ -8,37 +7,13 @@ var util = require('util');
 var moduleFilter = {};
 var levelFilter = 3;
 var levelNames = ['ERROR', 'WARNING', 'INFO', 'DEBUG'];
-var log_stdout = process.stdout;
 
-var getTime = function () { return moment().format('YYMMDD_HHmmss'); };
-
-var name = getTime();
-var dir = __dirname + '/logs/';
-try {
-	fs.mkdirSync(dir, '755');
-}
-catch (err) {
-	// Rethrow all errors except 'dir already exists'.
-	if (err.code) {
-		if (err.code != 'EEXIST') {
-			throw err;
-		}
-	}
-	else {
-		throw err;
-	}
-}
-var log_file = fs.createWriteStream(dir+ name + '.log', {flags : 'w'});
-
-var newLog = function (msg) {
-    var time = getTime() + ': ';
-    log_file.write(time + util.format(msg) + '\n');
-    log_stdout.write(time + util.format(msg) + '\n');
-};
-
-module.exports = function createLogging (module, showLevel) {
-    if (showLevel !== undefined) {
-        showLevel = true;
+module.exports = function createLogging (module, showModule, showLevel) {
+    if (showModule === undefined) {
+        showModule = true;
+    }
+    if (showLevel === undefined) {
+        showLevel = false;
     }
 
     return {
@@ -48,12 +23,15 @@ module.exports = function createLogging (module, showLevel) {
             }
 
             if (!(module in moduleFilter) && level <= levelFilter) {
-                var msgStr = moment().format('MM/DD/YY HH:MM');
-                if (showLevel) {
-                    msgStr += ' ' + levelNames[level];
+                var msgStr = '';
+                if (showModule) {
+                    msgStr += module + '::';
                 }
-                msgStr += ' ' + msg + '\n';
-                newLog(msgStr);
+                if (showLevel) {
+                    msgStr += levelNames[level] + '::';
+                }
+                msgStr += msg;
+                process.stdout.write(util.format(msgStr));
             }
         },
         stringify: function (obj) {
