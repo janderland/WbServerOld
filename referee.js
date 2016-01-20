@@ -6,8 +6,8 @@ const util = require('util'),
 	  logging = require('./log.js')('referee'),
 	  log = logging.log,
 
-	  clickWinCount = 50,
-	  countDownStart = 5;
+	  clickWinCount = process.env.WINCOUNT || 50,
+	  countDownStart = process.env.COUNTDOWN || 5;
 
 var Referee = function (client1, client2) {
 	var player1,

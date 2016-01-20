@@ -1,6 +1,6 @@
 'use strict';
 
-const logging = require('./log')('matchMaker'),
+const logging = require('./log')('matchmaker'),
 	  log = logging.log;
 
 module.exports = function getMatchMaker (Client, NullClient, Referee) {

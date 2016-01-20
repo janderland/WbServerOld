@@ -1,6 +1,6 @@
 'use strict';
 
-const logging = require('./log')('gameServer'),
+const logging = require('./log')('server'),
       log = logging.log,
 
       WebSocketServer = require('websocket').server,
@@ -16,7 +16,7 @@ const logging = require('./log')('gameServer'),
       matchMaker = require('./matchMaker')(Client, NullClient, Referee),
 
       port = process.env.PORT || 5000,
-      singleplayer = false;
+      singleplayer = process.env.SP || false;
 
 var conns = {};
 
