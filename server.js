@@ -57,3 +57,6 @@ wsServer.on('request', function onConnectionRequest (request) {
 });
 
 matchMaker.singleplayer = singleplayer;
+if (singleplayer) {
+  log('Singleplayer mode!', logging.WARNING);
+}
