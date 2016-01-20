@@ -7,12 +7,14 @@ const util = require('util'),
 	  log = logging.log,
 
 	  clickWinCount = process.env.WINCOUNT || 50,
-	  countDownStart = process.env.COUNTDOWN || 5;
+	  countDownStart = process.env.COUNTDOWN || 5,
+	  sendCountInterval = 300;
 
 var Referee = function (client1, client2) {
 	var player1,
 		player2,
-		intervalID,
+		countingIntervalId,
+		sendCountIntervalId,
 		thisReferee = this; // Used to preserve the value of 'this' in refLog().
 
 	EventEmitter.call(this);
@@ -35,12 +37,12 @@ var Referee = function (client1, client2) {
 		};
 
 		player1.once('name', function createPlayer1 (name) {
-			refLog('Got a name.');
+			refLog('Player1 named ' + name + '.');
 			player1.name = name;
 			checkNames();
 		});
 		player2.once('name', function createPlayer2 (name) {
-			refLog('Got a name.');
+			refLog('Player 2 named ' + name + '.');
 			player2.name = name;
 			checkNames();
 		});
@@ -56,13 +58,13 @@ var Referee = function (client1, client2) {
 	var enterCountingState = function () {
 		var value = countDownStart;
 
-		intervalID = setInterval(function countingDown () {
+		countingIntervalId = setInterval(function countingDown () {
 			refLog('Counting ' + value);
 			player1.countDown(value);
 			player2.countDown(value);
 
 			if (value === 0) {
-				clearInterval(intervalID);
+				clearInterval(countingIntervalId);
 				enterGamingState();
 			}
 			else {
@@ -75,14 +77,9 @@ var Referee = function (client1, client2) {
 		var endGame = function (winningPlayer) {
 			player1.removeListener('click', player1.click);
 			player2.removeListener('click', player2.click);
+			clearInterval(sendCountIntervalId);
 
 			enterDoneState(winningPlayer === player1);
-		};
-
-		// TODO - Throttle count update messages?
-		var sendClickCount = function () {
-			player1.clickCount(player1.count, player2.count);
-			player2.clickCount(player2.count, player1.count);
 		};
 
 		var click = function () {
@@ -90,18 +87,30 @@ var Referee = function (client1, client2) {
 			if (this.count >= clickWinCount) {
 				endGame(this);
 			}
-			else {
-				sendClickCount();
-			}
 		};
 
 		player1.click = player2.click = click;
 		player1.on('click', player1.click);
 		player2.on('click', player2.click);
+
+		// Send updates on player progress to clients every so often.
+		sendCountIntervalId = setInterval(function sendClickCount () {
+			player1.clickCount(player1.count, player2.count);
+			player2.clickCount(player2.count, player1.count);
+		}, sendCountInterval);
 	};
 
 	var enterDoneState = function (player1Won) {
 		var winner;
+
+		// Because we don't know if this function was called
+		// from a disconnect, we need to clear all possible
+		// interval IDs and remove all listeners.
+		clearInterval(countingIntervalId);
+		clearInterval(sendCountIntervalId);
+		player1.removeAllListeners();
+		player2.removeAllListeners();
+
 		if (player1Won) {
 			winner = player1.name;
 		}
@@ -109,11 +118,6 @@ var Referee = function (client1, client2) {
 			winner = player2.name;
 		}
 		refLog(winner + ' won!');
-
-		clearInterval(intervalID);
-
-		player1.removeAllListeners();
-		player2.removeAllListeners();
 
 		player1.gameOver(player1Won);
 		player2.gameOver(!player1Won);
@@ -129,6 +133,7 @@ var Referee = function (client1, client2) {
 	};
 
 	var onPlayerClose = function () {
+		// If a player's connection closes, the other player automatically wins.
 		enterDoneState(this === player2);
 	};
 

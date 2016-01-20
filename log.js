@@ -13,7 +13,7 @@ module.exports = function createLogging (module, showModule, showLevel) {
         showModule = true;
     }
     if (showLevel === undefined) {
-        showLevel = false;
+        showLevel = true;
     }
 
     return {
