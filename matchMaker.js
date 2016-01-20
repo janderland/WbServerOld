@@ -6,9 +6,13 @@ const logging = require('./log')('matchmaker'),
 module.exports = function getMatchMaker (Client, NullClient, Referee) {
 	var waitingConn = null;
 
+	var onConnectionClose = function () {
+		waitingConn = null;
+	};
+
 	return {
 		referees: {},
-		queueToPlay: function (conn) {
+		enqueue: function (conn) {
 			const mp = !this.singleplayer,
 			// Used to preserve the value of 'this' in ref event handlers.
 			thisMatchMaker = this;
@@ -34,6 +38,11 @@ module.exports = function getMatchMaker (Client, NullClient, Referee) {
 				});
 
 				ref.startGame();
+			}
+		},
+		dequeue: function (conn) {
+			if (waitingConn === conn) {
+				waitingConn = null;
 			}
 		},
 		singleplayer: false

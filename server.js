@@ -16,7 +16,7 @@ const logging = require('./log')('server'),
       matchMaker = require('./matchMaker')(Client, NullClient, Referee),
 
       port = process.env.PORT || 5000,
-      singleplayer = (process.env.SP ? process.env.SP === 'true' : true);
+      singleplayer = (process.env.SP ? process.env.SP === 'true' : false);
 
 var conns = {};
 
@@ -50,12 +50,12 @@ wsServer.on('request', function onConnectionRequest (request) {
     log(addr + ' => Connection accepted.', logging.DEBUG);
 
     conn.on('close', function onConnectionClose (reasonCode, description) {
-        log(addr + ' => Disconnected. Code: ' + reasonCode + ' Desc: ' + description,
-            logging.DEBUG);
+        log(addr + ' => Disconnected. Code: ' + reasonCode + ' Desc: ' + description, logging.DEBUG);
+        matchMaker.dequeue(conn);
         delete conns[addr];
     });
 
-    matchMaker.queueToPlay(conn);
+    matchMaker.enqueue(conn);
 });
 
 matchMaker.singleplayer = singleplayer;
