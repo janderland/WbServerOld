@@ -32,7 +32,7 @@ Deno.test("Client", async (t) => {
   let client;
   let conn;
 
-  Deno.serve((req) => {
+  const server = Deno.serve((req) => {
     if (req.headers.get("upgrade") !== "websocket") {
       return new Response(null, { status: 501 });
     }
@@ -46,7 +46,7 @@ Deno.test("Client", async (t) => {
     conn.addEventListener("open", resolve);
   });
 
-  let name = new Promise((resolve) => {
+  const name = new Promise((resolve) => {
     client.onName = resolve;
   });
 
@@ -54,4 +54,5 @@ Deno.test("Client", async (t) => {
   assertEquals(await name, "test");
 
   conn.close();
+  await server.shutdown();
 });

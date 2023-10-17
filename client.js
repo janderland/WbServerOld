@@ -1,7 +1,7 @@
 import * as msg from "./messages.js";
 
 class ClientCallbacks {
-  #onError;
+  #onError = (_) => {};
 
   set onError(value) {
     if (!value) {
@@ -15,7 +15,8 @@ class ClientCallbacks {
     return this.#onError;
   }
 
-  #onName;
+  #onName = (_) => {};
+
   set onName(value) {
     if (!value) {
       this.#onName = (_) => {};
@@ -28,7 +29,8 @@ class ClientCallbacks {
     return this.#onName;
   }
 
-  #onClick;
+  #onClick = () => {};
+
   set onClick(value) {
     if (!value) {
       this.#onClick = () => {};
@@ -41,7 +43,7 @@ class ClientCallbacks {
     return this.#onClick;
   }
 
-  #onClose;
+  #onClose = () => {};
 
   set onClose(value) {
     if (!value) {
